@@ -1,0 +1,58 @@
+
+> temp-app@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./src/lib/supabase/server.ts
+Error: 
+  [31mx[0m the name `createServerClient` is defined multiple times
+    ,-[[36;1;4mC:\Users\moham\Desktop\Muisc acadmey\src\lib\supabase\server.ts[0m:1:1]
+ [2m 1[0m | import { createServerClient } from "@supabase/ssr";
+    : [31;1m         ^^^^^^^^^|^^^^^^^^[0m
+    :                   [31;1m`-- [31;1mprevious definition of `createServerClient` here[0m[0m
+ [2m 2[0m | import { cookies } from "next/headers";
+ [2m 3[0m | 
+ [2m 4[0m | export const createServerClientInstance = () => {
+ [2m 5[0m |   const cookieStore = cookies();
+ [2m 6[0m |   return createServerClient(
+ [2m 7[0m |     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+ [2m 8[0m |     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+ [2m 9[0m |     {
+ [2m10[0m |       cookies: {
+ [2m11[0m |         getAll() {
+ [2m12[0m |           return cookieStore.getAll();
+ [2m13[0m |         },
+ [2m14[0m |         setAll(cookiesToSet) {
+ [2m15[0m |           try {
+ [2m16[0m |             cookiesToSet.forEach(({ name, value, options }) =>
+ [2m17[0m |               cookieStore.set(name, value, options)
+ [2m18[0m |             );
+ [2m19[0m |           } catch {
+ [2m20[0m |             // The `setAll` method was called from a Server Component.
+ [2m21[0m |             // This can be ignored if you have middleware refreshing
+ [2m22[0m |             // user sessions.
+ [2m23[0m |           }
+ [2m24[0m |         },
+ [2m25[0m |       },
+ [2m26[0m |     }
+ [2m27[0m |   );
+ [2m28[0m | };
+ [2m29[0m | 
+ [2m30[0m | export const createServerClientWithTypes = createServerClientInstance;
+ [2m31[0m | // To maintain backward compatibility with any other imports
+ [2m32[0m | export const createServerClient = createServerClientInstance;
+    : [33;1m             ^^^^^^^^^|^^^^^^^^[0m
+    :                       [33;1m`-- [33;1m`createServerClient` redefined here[0m[0m
+    `----
+
+Import trace for requested module:
+./src/lib/supabase/server.ts
+./src/app/page.tsx
+
+
+> Build failed because of webpack errors

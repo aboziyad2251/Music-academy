@@ -1,0 +1,26 @@
+
+> temp-app@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+
+   Creating an optimized production build ...
+Failed to compile.
+
+src\app\(admin)\courses\page.tsx
+You cannot have two parallel pages that resolve to the same path. Please check /(admin)/courses/page and /(student)/courses/page. Refer to the route group docs for more information: https://nextjs.org/docs/app/building-your-application/routing/route-groups
+
+src\app\(admin)\dashboard\page.tsx
+You cannot have two parallel pages that resolve to the same path. Please check /(admin)/dashboard/page and /(student)/dashboard/page. Refer to the route group docs for more information: https://nextjs.org/docs/app/building-your-application/routing/route-groups
+
+src\app\(student)\courses\page.tsx
+You cannot have two parallel pages that resolve to the same path. Please check /(admin)/courses/page and /(student)/courses/page. Refer to the route group docs for more information: https://nextjs.org/docs/app/building-your-application/routing/route-groups
+
+src\app\(student)\dashboard\page.tsx
+You cannot have two parallel pages that resolve to the same path. Please check /(admin)/dashboard/page and /(student)/dashboard/page. Refer to the route group docs for more information: https://nextjs.org/docs/app/building-your-application/routing/route-groups
+
+src\app\(teacher)\courses\page.tsx
+You cannot have two parallel pages that resolve to the same path. Please check /(admin)/courses/page and /(student)/courses/page. Refer to the route group docs for more information: https://nextjs.org/docs/app/building-your-application/routing/route-groups
+
+
+> Build failed because of webpack errors

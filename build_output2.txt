@@ -1,0 +1,72 @@
+
+> temp-app@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/admin/users/page.tsx
+76:9  Warning: 'roleBadge' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/cron/reminders/route.ts
+8:9  Warning: 'secret' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/student/dashboard/page.tsx
+84:7  Warning: 'courseProgressMap' is never reassigned. Use 'const' instead.  prefer-const
+
+./src/app/teacher/courses/page.tsx
+20:6  Warning: React Hook useEffect has a missing dependency: 'fetchCourses'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/teacher/courses/[courseId]/assignments/new/page.tsx
+31:6  Warning: React Hook useEffect has a missing dependency: 'fetchLessons'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/teacher/courses/[courseId]/page.tsx
+23:6  Warning: React Hook useEffect has a missing dependency: 'fetchCourseData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/teacher/students/page.tsx
+42:6  Warning: React Hook useEffect has a missing dependency: 'supabase'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+46:6  Warning: React Hook useEffect has a missing dependency: 'fetchStudents'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/admin/Analytics.tsx
+17:6  Warning: React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/admin/UserTable.tsx
+13:9  Warning: 'supabase' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/layout/Navbar.tsx
+39:10  Warning: 'payload' is defined but never used.  @typescript-eslint/no-unused-vars
+48:6  Warning: React Hook useEffect has missing dependencies: 'fetchNotifications' and 'supabase'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/layout/Sidebar.tsx
+106:6  Warning: React Hook useEffect has a missing dependency: 'supabase'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/student/CourseCard.tsx
+3:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/student/LessonPlayer.tsx
+3:28  Warning: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/student/SubmissionForm.tsx
+80:21  Warning: 'uploadData' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/teacher/GradingPanel.tsx
+30:6  Warning: React Hook useEffect has a missing dependency: 'fetchUngraded'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+Failed to compile.
+
+./src/app/api/stripe/checkout/route.ts:36:44
+Type error: Type '"2024-04-10"' is not assignable to type '"2026-02-25.clover"'.
+
+[0m [90m 34 |[39m     [90m// Stripe is enabled — normal checkout flow[39m[0m
+[0m [90m 35 |[39m     [36mconst[39m [33mStripe[39m [33m=[39m ([36mawait[39m [36mimport[39m([32m"stripe"[39m))[33m.[39m[36mdefault[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 36 |[39m     [36mconst[39m stripe [33m=[39m [36mnew[39m [33mStripe[39m(stripeKey[33m,[39m { apiVersion[33m:[39m [32m"2024-04-10"[39m })[33m;[39m[0m
+[0m [90m    |[39m                                            [31m[1m^[22m[39m[0m
+[0m [90m 37 |[39m[0m
+[0m [90m 38 |[39m     [36mconst[39m { data[33m:[39m course[33m,[39m error } [33m=[39m [36mawait[39m supabase[0m
+[0m [90m 39 |[39m       [33m.[39m[36mfrom[39m([32m"courses"[39m)[0m
+Next.js build worker exited with code: 1 and signal: null
