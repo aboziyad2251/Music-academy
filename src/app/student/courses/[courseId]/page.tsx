@@ -31,6 +31,7 @@ export default function CourseDetailPage({
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [enrollmentCount, setEnrollmentCount] = useState<number | null>(null);
 
   const supabase = createClient();
 
@@ -64,6 +65,13 @@ export default function CourseDetailPage({
         .order("position", { ascending: true });
 
       if (lessonsData) setLessons(lessonsData);
+
+      const { count: totalEnrolled } = await supabase
+        .from("enrollments")
+        .select("id", { count: "exact", head: true })
+        .eq("course_id", params.courseId);
+
+      setEnrollmentCount(totalEnrolled ?? 0);
 
       if (enrolled) {
         const { data: progressData } = await supabase
@@ -169,7 +177,7 @@ export default function CourseDetailPage({
               </span>
               <span className="flex items-center gap-1.5">
                 <Users className="h-4 w-4" />
-                {Math.floor(Math.random() * 500) + 50} students
+                {enrollmentCount ?? "..."} students
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4" />

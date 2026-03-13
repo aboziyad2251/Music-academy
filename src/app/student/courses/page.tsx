@@ -97,6 +97,7 @@ export default function CourseCatalogPage() {
             <SelectItem value="all">All Categories</SelectItem>
             <SelectItem value="piano">Piano</SelectItem>
             <SelectItem value="guitar">Guitar</SelectItem>
+            <SelectItem value="oud">Oud</SelectItem>
             <SelectItem value="vocals">Vocals</SelectItem>
             <SelectItem value="theory">Theory</SelectItem>
             <SelectItem value="drums">Drums</SelectItem>

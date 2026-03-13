@@ -11,8 +11,8 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
-  const [email, setEmail] = useState("student@example.com");
-  const [password, setPassword] = useState("teacher123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();

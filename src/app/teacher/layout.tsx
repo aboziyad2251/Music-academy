@@ -24,7 +24,7 @@ export default async function TeacherLayout({
   const { count: ungradedCount } = await supabase
     .from("submissions")
     .select("id", { count: "exact", head: true })
-    .is("grade", null)
+    .is("score", null)
     .in(
       "assignment_id",
       (

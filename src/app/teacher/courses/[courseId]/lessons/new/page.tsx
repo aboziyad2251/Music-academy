@@ -91,7 +91,7 @@ export default function AddLessonPage({ params }: { params: { courseId: string }
         course_id: params.courseId,
         title,
         description,
-        order_index: (count || 0) + 1,
+        position: (count || 0) + 1,
       };
 
       if (mediaType && fileUrl) {

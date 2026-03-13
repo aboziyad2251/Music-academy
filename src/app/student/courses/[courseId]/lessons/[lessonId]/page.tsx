@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -35,7 +35,7 @@ export default function LessonDetailPage({
   params: { courseId: string; lessonId: string };
 }) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [lesson, setLesson] = useState<any>(null);

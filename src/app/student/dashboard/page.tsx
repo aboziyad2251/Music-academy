@@ -129,8 +129,19 @@ export default async function StudentDashboardPage() {
 
   let dayStreak = 0;
   if (completedProgress && completedProgress.length > 0) {
-    const last = new Date(completedProgress[0].updated_at);
-    if (last.toDateString() === new Date().toDateString()) dayStreak = 1;
+    const activityDates = new Set(
+      completedProgress.map((p: any) => new Date(p.updated_at).toDateString())
+    );
+    const today = new Date();
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      if (activityDates.has(d.toDateString())) {
+        dayStreak++;
+      } else {
+        break;
+      }
+    }
   }
 
   const statValues: Record<string, number> = {

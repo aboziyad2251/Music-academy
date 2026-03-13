@@ -163,11 +163,16 @@ CREATE POLICY "Users can insert their own enrollments (via webhook usually) or a
     WITH CHECK (auth.uid() = student_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- Submissions Policies
-CREATE POLICY "Students see own, graders see assigned, admins see all."
+CREATE POLICY "Students see own, teachers see their course submissions, admins see all."
     ON submissions FOR SELECT
     USING (
         auth.uid() = student_id OR
-        auth.uid() = graded_by OR
+        EXISTS (
+            SELECT 1 FROM assignments a
+            JOIN lessons l ON a.lesson_id = l.id
+            JOIN courses c ON l.course_id = c.id
+            WHERE a.id = submissions.assignment_id AND c.teacher_id = auth.uid()
+        ) OR
         EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
     );
 CREATE POLICY "Students can insert their own submissions."

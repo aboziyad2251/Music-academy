@@ -106,7 +106,7 @@ export default async function TeacherDashboardPage() {
           .from("submissions")
           .select("id", { count: "exact", head: true })
           .in("assignment_id", assignmentIds)
-          .is("grade", null);
+          .is("score", null);
         pendingCount = pc ?? 0;
 
         const { data: graded } = await supabase

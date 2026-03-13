@@ -7,7 +7,8 @@
       "Bash(test -d \"c:\\\\Users\\\\moham\\\\Desktop\\\\Muisc acadmey\\\\src\\\\app\\\\\\(teacher\\)\\\\grades\")",
       "Bash(find \"c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(teacher\\)\" -type f)",
       "Bash(ls \"c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(teacher\\)/grades/\")",
-      "Bash(find 'c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(admin\\)' -type f)"
+      "Bash(find 'c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(admin\\)' -type f)",
+      "Bash(npm run:*)"
     ]
   }
 }

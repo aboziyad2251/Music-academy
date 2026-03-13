@@ -39,7 +39,7 @@ export default function ManageCoursePage({ params }: { params: { courseId: strin
       .from("lessons")
       .select("*")
       .eq("course_id", params.courseId)
-      .order("order_index", { ascending: true });
+      .order("position", { ascending: true });
     
     setLessons(lessonsData || []);
 
@@ -132,7 +132,9 @@ export default function ManageCoursePage({ params }: { params: { courseId: strin
                   <CheckCircle2 className="mr-2 h-4 w-4" /> Publish Live
                 </Button>
              )}
-             <Button variant="outline"><Settings className="mr-2 h-4 w-4" /> Settings</Button>
+             <Link href={`/teacher/courses/${course.id}/edit`}>
+               <Button variant="outline"><Settings className="mr-2 h-4 w-4" /> Edit Course</Button>
+             </Link>
              <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 ml-auto" onClick={deleteCourse}>
                 <Trash2 className="h-4 w-4" />
              </Button>

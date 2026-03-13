@@ -11,10 +11,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Stripe is disabled — enroll directly for free
+    // Check if Stripe is configured
     const stripeKey = process.env.STRIPE_SECRET_KEY;
-    if (!stripeKey || stripeKey === "sk_test_...") {
-      // Direct enrollment bypass (no payment)
+    const stripeDisabled = !stripeKey || stripeKey === "sk_test_...";
+
+    if (stripeDisabled) {
+      // Fetch course to check price
+      const { data: courseCheck } = await supabase
+        .from("courses")
+        .select("price")
+        .eq("id", courseId)
+        .single();
+
+      if (courseCheck && courseCheck.price > 0) {
+        return NextResponse.json(
+          { error: "Payment processing is not configured. Please contact the administrator." },
+          { status: 503 }
+        );
+      }
+
+      // Free course — enroll directly
       const { error } = await supabase
         .from("enrollments")
         .insert({

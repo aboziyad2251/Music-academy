@@ -183,6 +183,7 @@ export default function CreateCoursePage() {
             >
               <option value="Piano">Piano</option>
               <option value="Guitar">Guitar</option>
+              <option value="Oud">Oud</option>
               <option value="Vocals">Vocals</option>
               <option value="Drums">Drums</option>
               <option value="Violin">Violin</option>

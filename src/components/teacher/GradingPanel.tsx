@@ -93,7 +93,7 @@ export default function GradingPanel({ teacherId }: GradingPanelProps) {
     if (!selectedSub) return;
     setAiLoading(true);
     try {
-      const res = await fetch("/api/ai/claude", {
+      const res = await fetch("/api/ai/gemini", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

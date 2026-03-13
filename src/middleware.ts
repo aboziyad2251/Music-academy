@@ -43,14 +43,6 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  // Allow unauthenticated users to access the login page
-  if (pathname === "/login") {
-    if (session) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-    return res;
-  }
-
   // Protect AI API routes, must return JSON instead of redirect
   if (pathname.startsWith("/api/ai")) {
     if (!session) {
@@ -60,22 +52,20 @@ export async function middleware(req: NextRequest) {
   }
 
   // All other routes listed require at least a session
-  const isProtectedPath = 
-    pathname.startsWith("/admin") || 
-    pathname.startsWith("/teacher") || 
+  const isProtectedPath =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/teacher") ||
     pathname.startsWith("/student") ||
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/courses");
 
-  if (!isProtectedPath) {
+  if (!session) {
+    if (pathname === "/login") return res;
+    if (isProtectedPath) return NextResponse.redirect(new URL("/login", req.url));
     return res;
   }
 
-  if (!session) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  // Check roles for path-based authorization
+  // Fetch role once for all authenticated checks
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -83,6 +73,17 @@ export async function middleware(req: NextRequest) {
     .single();
 
   const role = profile?.role || "student";
+
+  // Redirect logged-in users away from /login to their dashboard
+  if (pathname === "/login") {
+    const dest =
+      role === "admin"
+        ? "/admin/dashboard"
+        : role === "teacher"
+        ? "/teacher/dashboard"
+        : "/student/dashboard";
+    return NextResponse.redirect(new URL(dest, req.url));
+  }
 
   // /admin/* → only role 'admin' allowed
   if (pathname.startsWith("/admin")) {

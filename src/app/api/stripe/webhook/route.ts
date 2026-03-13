@@ -32,11 +32,22 @@ export async function POST(req: Request) {
 
     if (courseId && studentId) {
       const supabase = createServerClient();
-      await supabase.from("enrollments").insert({
-        course_id: courseId,
-        student_id: studentId,
-        stripe_payment_id: session.id,
-      });
+
+      // Idempotency: skip if already enrolled (e.g. webhook delivered twice)
+      const { data: existing } = await supabase
+        .from("enrollments")
+        .select("id")
+        .eq("course_id", courseId)
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from("enrollments").insert({
+          course_id: courseId,
+          student_id: studentId,
+          stripe_payment_id: session.id,
+        });
+      }
     }
   }
 

@@ -22,11 +22,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const numericScore = parseInt(score);
+    if (isNaN(numericScore) || numericScore < 0) {
+      return NextResponse.json({ error: "Score must be a non-negative number" }, { status: 400 });
+    }
+
+    // Validate score does not exceed the assignment's max_score
+    const { data: submissionCheck } = await supabase
+      .from("submissions")
+      .select("assignment:assignment_id(max_score)")
+      .eq("id", submissionId)
+      .single();
+
+    const maxScore = (submissionCheck?.assignment as any)?.max_score ?? 100;
+    if (numericScore > maxScore) {
+      return NextResponse.json(
+        { error: `Score cannot exceed the maximum score of ${maxScore}` },
+        { status: 400 }
+      );
+    }
+
     // 1. Update the submission
     const { data: submission, error: updateError } = await supabase
       .from("submissions")
       .update({
-        score: parseInt(score),
+        score: numericScore,
         feedback: feedback ? feedback.trim() : null,
         graded_by: session!.user.id,
       })
@@ -57,14 +77,14 @@ export async function POST(req: NextRequest) {
     // 3. Create In-App Notification
     await supabase.from("notifications").insert({
       user_id: submission.student_id,
-      message: `Your assignment "${assignmentTitle}" was graded: ${score}`,
+      message: `Your assignment "${assignmentTitle}" was graded: ${numericScore}`,
       link: link
     });
 
     // 4. Send Email Notification
     if (studentEmail) {
       // Fire and forget
-      sendGradeNotification(studentEmail, assignmentTitle, parseInt(score), feedback || "", `${process.env.NEXT_PUBLIC_APP_URL}${link}`)
+      sendGradeNotification(studentEmail, assignmentTitle, numericScore, feedback || "", `${process.env.NEXT_PUBLIC_APP_URL}${link}`)
         .catch(err => console.error("Email block error:", err));
     }
 
