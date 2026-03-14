@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/lib/i18n/context";
 
 interface StudentShellProps {
   user: {
@@ -30,11 +31,11 @@ interface StudentShellProps {
 }
 
 const NAV_LINKS = [
-  { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/student/courses",   label: "Browse Courses", icon: Library },
-  { href: "/student/dashboard", label: "My Courses", icon: BookOpen },
-  { href: "/student/progress",  label: "My Progress", icon: TrendingUp },
-  { href: "/student/assignments", label: "Assignments", icon: ClipboardList },
+  { href: "/student/dashboard", label: "shell.dashboard", icon: LayoutDashboard },
+  { href: "/student/courses",   label: "shell.courses", icon: Library },
+  { href: "/student/dashboard", label: "shell.courses", icon: BookOpen },
+  { href: "/student/progress",  label: "shell.progress", icon: TrendingUp }, 
+  { href: "/student/assignments", label: "shell.assignments", icon: ClipboardList },
 ];
 
 export default function StudentShell({ user, children }: StudentShellProps) {
@@ -42,6 +43,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useI18n();
 
   const initials = user.full_name
     .split(" ")
@@ -68,7 +70,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
       {/* Nav */}
       <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
         <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-600">
-          Student Portal
+          {t("shell.studentPortal")}
         </p>
         {NAV_LINKS.map(({ href, label, icon: Icon }) => {
           const isActive =
@@ -92,7 +94,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
                   isActive ? "text-indigo-200" : "text-slate-500 group-hover:text-slate-300"
                 )}
               />
-              {label}
+              {t(label)}
             </Link>
           );
         })}
@@ -117,7 +119,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-950/40 transition-all"
         >
           <LogOut className="h-4 w-4" />
-          Sign Out
+          {t("shell.logout")}
         </button>
       </div>
     </div>
@@ -162,7 +164,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
               <Menu className="h-5 w-5" />
             </button>
             <span className="hidden lg:block text-sm text-slate-400">
-              Welcome back,{" "}
+              {t("shell.welcomeBack")}{" "}
               <span className="font-semibold text-white">
                 {user.full_name.split(" ")[0]}
               </span>
