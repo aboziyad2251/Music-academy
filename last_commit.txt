@@ -1,0 +1,38 @@
+commit 098bc4147bbec9504b721088c85cb1f192a78e28
+Author: Mohammed Abotargah <tarj123@gmail.com>
+Date:   Sat Mar 14 00:47:02 2026 +0300
+
+    feat: full app audit fixes, Phase 1 & 2, admin user management, Oud category
+    
+    Phase 1 - Critical fixes:
+    - Fix middleware to redirect to role-based dashboards
+    - Fix teacher layout ungraded count (grade -> score column)
+    - Update submissions RLS policy for teacher access
+    - Implement Gemini AI grading route
+    - Build course edit page from scratch
+    - Wire admin courses/settings/users APIs to real DB
+    - Implement useAuth hook
+    - Fix lesson insert column (order_index -> position)
+    
+    Phase 2 HIGH - Security & data fixes:
+    - Remove hardcoded demo credentials from login form
+    - Block free enrollment bypass for paid courses without Stripe
+    - Add score <= max_score validation in grade API
+    - Add Stripe webhook idempotency check
+    - Replace random student count with real DB enrollment count
+    - Fix day streak to count consecutive days
+    
+    Phase 2 MEDIUM - Bug fixes:
+    - Fix teacher dashboard pending count (.is grade -> score)
+    - Stabilize Supabase client in lesson page (useMemo)
+    - Fix GradingPanel AI endpoint to /api/ai/gemini
+    
+    Admin user management:
+    - Add POST /api/admin/users (create user via Supabase auth.admin)
+    - Add DELETE /api/admin/users (hard delete user + profile)
+    - Add User modal and Delete button in admin users page
+    
+    Content:
+    - Add Oud as instrument category across teacher and student pages
+    
+    Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>

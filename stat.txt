@@ -1,0 +1,66 @@
+commit 098bc4147bbec9504b721088c85cb1f192a78e28
+Author: Mohammed Abotargah <tarj123@gmail.com>
+Date:   Sat Mar 14 00:47:02 2026 +0300
+
+    feat: full app audit fixes, Phase 1 & 2, admin user management, Oud category
+    
+    Phase 1 - Critical fixes:
+    - Fix middleware to redirect to role-based dashboards
+    - Fix teacher layout ungraded count (grade -> score column)
+    - Update submissions RLS policy for teacher access
+    - Implement Gemini AI grading route
+    - Build course edit page from scratch
+    - Wire admin courses/settings/users APIs to real DB
+    - Implement useAuth hook
+    - Fix lesson insert column (order_index -> position)
+    
+    Phase 2 HIGH - Security & data fixes:
+    - Remove hardcoded demo credentials from login form
+    - Block free enrollment bypass for paid courses without Stripe
+    - Add score <= max_score validation in grade API
+    - Add Stripe webhook idempotency check
+    - Replace random student count with real DB enrollment count
+    - Fix day streak to count consecutive days
+    
+    Phase 2 MEDIUM - Bug fixes:
+    - Fix teacher dashboard pending count (.is grade -> score)
+    - Stabilize Supabase client in lesson page (useMemo)
+    - Fix GradingPanel AI endpoint to /api/ai/gemini
+    
+    Admin user management:
+    - Add POST /api/admin/users (create user via Supabase auth.admin)
+    - Add DELETE /api/admin/users (hard delete user + profile)
+    - Add User modal and Delete button in admin users page
+    
+    Content:
+    - Add Oud as instrument category across teacher and student pages
+    
+    Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+ .claude/settings.local.json                        |   3 +-
+ src/app/(auth)/login/page.tsx                      |   4 +-
+ src/app/admin/courses/page.tsx                     | 310 +++++----------
+ src/app/admin/settings/page.tsx                    | 161 +++-----
+ src/app/admin/users/page.tsx                       | 417 ++++++++++++++-------
+ src/app/api/admin/courses/route.ts                 |  53 +++
+ src/app/api/admin/settings/route.ts                |  23 ++
+ src/app/api/admin/users/route.ts                   |  75 +++-
+ src/app/api/ai/gemini/route.ts                     |  80 +++-
+ src/app/api/stripe/checkout/route.ts               |  22 +-
+ src/app/api/stripe/webhook/route.ts                |  21 +-
+ src/app/api/teacher/grade/route.ts                 |  26 +-
+ .../courses/[courseId]/lessons/[lessonId]/page.tsx |   4 +-
+ src/app/student/courses/[courseId]/page.tsx        |  10 +-
+ src/app/student/courses/page.tsx                   |   1 +
+ src/app/student/dashboard/page.tsx                 |  15 +-
+ src/app/teacher/courses/[courseId]/edit/page.tsx   | 165 +++++++-
+ .../courses/[courseId]/lessons/new/page.tsx        |   2 +-
+ src/app/teacher/courses/[courseId]/page.tsx        |   6 +-
+ src/app/teacher/courses/new/page.tsx               |   1 +
+ src/app/teacher/dashboard/page.tsx                 |   2 +-
+ src/app/teacher/layout.tsx                         |   2 +-
+ src/components/teacher/GradingPanel.tsx            |   2 +-
+ src/hooks/useAuth.ts                               |  44 ++-
+ src/lib/supabase/schema.sql                        |   9 +-
+ src/middleware.ts                                  |  35 +-
+ 26 files changed, 977 insertions(+), 516 deletions(-)

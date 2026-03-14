@@ -7,7 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle, Search, Edit, Image as ImageIcon } from "lucide-react";
+import { toast } from "sonner";
+import { Loader2, PlusCircle, Search, Edit, Image as ImageIcon, Trash2 } from "lucide-react";
 
 export default function TeacherCoursesPage() {
   const supabase = createClient();
@@ -40,6 +41,18 @@ export default function TeacherCoursesPage() {
 
     setCourses(enriched);
     setLoading(false);
+  };
+
+  const handleDelete = async (courseId: string) => {
+    if (!window.confirm("Are you sure you want to delete this course? All data will be lost.")) return;
+    try {
+      const { error } = await supabase.from("courses").delete().eq("id", courseId);
+      if (error) throw error;
+      toast.success("Course deleted successfully.");
+      setCourses((prev) => prev.filter((c) => c.id !== courseId));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete course.");
+    }
   };
 
   const filtered = courses.filter((c) =>
@@ -125,11 +138,16 @@ export default function TeacherCoursesPage() {
                    </div>
                  </div>
 
-                 <Link href={`/teacher/courses/${c.id}`} className="mt-4">
-                   <Button variant="outline" className="w-full group-hover:bg-accent group-hover:text-white transition-colors">
-                     <Edit className="mr-2 h-4 w-4" /> Manage Course
+                 <div className="flex items-center gap-2 mt-4">
+                   <Link href={`/teacher/courses/${c.id}`} className="flex-1">
+                     <Button variant="outline" className="w-full group-hover:bg-accent group-hover:text-white transition-colors">
+                       <Edit className="mr-2 h-4 w-4" /> Manage
+                     </Button>
+                   </Link>
+                   <Button variant="outline" onClick={() => handleDelete(c.id)} className="px-3 border-red-200 text-red-500 hover:bg-red-50">
+                     <Trash2 className="h-4 w-4" />
                    </Button>
-                 </Link>
+                 </div>
                </div>
              </div>
           ))}

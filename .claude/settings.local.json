@@ -8,7 +8,14 @@
       "Bash(find \"c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(teacher\\)\" -type f)",
       "Bash(ls \"c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(teacher\\)/grades/\")",
       "Bash(find 'c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(admin\\)' -type f)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(node -e \"require\\(''fs''\\).writeFileSync\\(''/tmp/write_files.js'', ''const fs = require\\(String.fromCharCode\\(34\\)+\"\"fs\"\"+String.fromCharCode\\(34\\)\\); console.log\\(\"\"test\"\"\\);''\\);\")",
+      "Bash(node /tmp/write_files.js)",
+      "Bash(node -e \"require\\(''fs''\\).writeFileSync\\(''C:/Users/moham/AppData/Local/Temp/write_files.js'', ''const fs = require\\(\"\"fs\"\"\\); console.log\\(\"\"test\"\"\\);''\\);\")",
+      "Bash(node \"C:/Users/moham/AppData/Local/Temp/write_files.js\")",
+      "Bash(node -e \":*)",
+      "Bash(node \"C:/Users/moham/AppData/Local/Temp/write_phase1.js\")",
+      "Bash(npx tsc:*)"
     ]
   }
 }

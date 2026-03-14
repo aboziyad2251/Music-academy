@@ -1,0 +1,33 @@
+On branch main
+Your branch is up to date with 'academy/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .claude/settings.local.json
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	git_status.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+diff --git a/.claude/settings.local.json b/.claude/settings.local.json
+index 8019571..b73d676 100644
+--- a/.claude/settings.local.json
++++ b/.claude/settings.local.json
+@@ -8,7 +8,14 @@
+       "Bash(find \"c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(teacher\\)\" -type f)",
+       "Bash(ls \"c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(teacher\\)/grades/\")",
+       "Bash(find 'c:/Users/moham/Desktop/Muisc acadmey/src/app/\\(admin\\)' -type f)",
+-      "Bash(npm run:*)"
++      "Bash(npm run:*)",
++      "Bash(node -e \"require\\(''fs''\\).writeFileSync\\(''/tmp/write_files.js'', ''const fs = require\\(String.fromCharCode\\(34\\)+\"\"fs\"\"+String.fromCharCode\\(34\\)\\); console.log\\(\"\"test\"\"\\);''\\);\")",
++      "Bash(node /tmp/write_files.js)",
++      "Bash(node -e \"require\\(''fs''\\).writeFileSync\\(''C:/Users/moham/AppData/Local/Temp/write_files.js'', ''const fs = require\\(\"\"fs\"\"\\); console.log\\(\"\"test\"\"\\);''\\);\")",
++      "Bash(node \"C:/Users/moham/AppData/Local/Temp/write_files.js\")",
++      "Bash(node -e \":*)",
++      "Bash(node \"C:/Users/moham/AppData/Local/Temp/write_phase1.js\")",
++      "Bash(npx tsc:*)"
+     ]
+   }
+ }
