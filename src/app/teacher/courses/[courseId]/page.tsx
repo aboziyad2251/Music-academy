@@ -129,13 +129,13 @@ export default function ManageCoursePage({ params }: { params: { courseId: strin
           <div className="mt-auto pt-4 flex gap-3">
              {course.status !== "published" && (
                 <Button onClick={publishCourse} className="bg-green-600 hover:bg-green-700">
-                  <CheckCircle2 className="mr-2 h-4 w-4" /> Publish Live
+                  <CheckCircle2 className="me-2 h-4 w-4" /> Publish Live
                 </Button>
              )}
              <Link href={`/teacher/courses/${course.id}/edit`}>
-               <Button variant="outline"><Settings className="mr-2 h-4 w-4" /> Edit Course</Button>
+               <Button variant="outline"><Settings className="me-2 h-4 w-4" /> Edit Course</Button>
              </Link>
-             <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 ml-auto" onClick={deleteCourse}>
+             <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 ms-auto" onClick={deleteCourse}>
                 <Trash2 className="h-4 w-4" />
              </Button>
           </div>
@@ -149,7 +149,7 @@ export default function ManageCoursePage({ params }: { params: { courseId: strin
             <h2 className="text-2xl font-bold text-slate-900">Curriculum</h2>
             <Link href={`/teacher/courses/${course.id}/lessons/new`}>
               <Button size="sm" className="bg-accent hover:bg-accent/90">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Lesson
+                <PlusCircle className="me-2 h-4 w-4" /> Add Lesson
               </Button>
             </Link>
           </div>
@@ -180,7 +180,7 @@ export default function ManageCoursePage({ params }: { params: { courseId: strin
                   </div>
                   {/* Nested assignments for this lesson */}
                   {assignments.filter(a => a.lesson_id === lesson.id).map(assn => (
-                    <div key={assn.id} className="ml-11 mt-2 p-3 bg-slate-50 border rounded-lg flex justify-between items-center text-sm">
+                    <div key={assn.id} className="ms-11 mt-2 p-3 bg-slate-50 border rounded-lg flex justify-between items-center text-sm">
                        <div>
                          <span className="font-semibold text-slate-700">Assignment:</span> {assn.title}
                        </div>
@@ -199,7 +199,7 @@ export default function ManageCoursePage({ params }: { params: { courseId: strin
             <h2 className="text-2xl font-bold text-slate-900">Assignments</h2>
             <Link href={`/teacher/courses/${course.id}/assignments/new`}>
                <Button size="sm" variant="outline" className="border-accent text-accent hover:bg-accent/10">
-                 <PlusCircle className="mr-2 h-4 w-4" /> Add Assignment
+                 <PlusCircle className="me-2 h-4 w-4" /> Add Assignment
                </Button>
             </Link>
           </div>
@@ -213,8 +213,8 @@ export default function ManageCoursePage({ params }: { params: { courseId: strin
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-slate-50">
-                    <th className="text-left p-4 font-semibold text-slate-600">Title</th>
-                    <th className="text-left p-4 font-semibold text-slate-600">Points</th>
+                    <th className="text-start p-4 font-semibold text-slate-600">Title</th>
+                    <th className="text-start p-4 font-semibold text-slate-600">Points</th>
                   </tr>
                 </thead>
                 <tbody>

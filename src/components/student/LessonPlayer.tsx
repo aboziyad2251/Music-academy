@@ -134,7 +134,7 @@ export default function LessonPlayer({
         >
           {completed ? (
             <>
-              <CheckCircle2 className="mr-2 h-5 w-5" />
+              <CheckCircle2 className="me-2 h-5 w-5" />
               Completed
             </>
           ) : loading ? (

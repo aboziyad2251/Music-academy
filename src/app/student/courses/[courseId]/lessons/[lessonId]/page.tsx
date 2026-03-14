@@ -242,7 +242,7 @@ export default function LessonDetailPage({
           href={`/student/courses/${params.courseId}`}
           className="inline-flex items-center text-sm text-slate-400 hover:text-white transition-colors"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Syllabus
+          <ArrowLeft className="me-2 h-4 w-4" /> Back to Syllabus
         </Link>
 
         {/* Title */}
@@ -251,7 +251,7 @@ export default function LessonDetailPage({
             Lesson {lesson.position}: {lesson.title}
           </h1>
           {lesson.description && (
-            <p className="text-slate-400 border-l-2 border-indigo-600 pl-4 py-1">
+            <p className="text-slate-400 border-s-2 border-indigo-600 ps-4 py-1">
               {lesson.description}
             </p>
           )}
@@ -276,7 +276,7 @@ export default function LessonDetailPage({
               asChild
             >
               <Link href={`/student/courses/${params.courseId}/lessons/${siblings.prev.id}`}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+                <ArrowLeft className="me-2 h-4 w-4" /> Previous
               </Link>
             </Button>
           ) : (
@@ -288,7 +288,7 @@ export default function LessonDetailPage({
               asChild
             >
               <Link href={`/student/courses/${params.courseId}/lessons/${siblings.next.id}`}>
-                Next Lesson <ArrowRight className="ml-2 h-4 w-4" />
+                Next Lesson <ArrowRight className="ms-2 h-4 w-4" />
               </Link>
             </Button>
           )}
@@ -456,13 +456,13 @@ export default function LessonDetailPage({
                   placeholder="Ask a question or share your thoughts..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  className="min-h-[72px] pr-12 resize-none bg-slate-800 border-slate-700 text-slate-200 placeholder:text-slate-600 focus-visible:ring-indigo-500"
+                  className="min-h-[72px] pe-12 resize-none bg-slate-800 border-slate-700 text-slate-200 placeholder:text-slate-600 focus-visible:ring-indigo-500"
                 />
                 <Button
                   type="submit"
                   size="icon"
                   disabled={!newComment.trim() || isPosting}
-                  className="absolute bottom-2 right-2 h-8 w-8 rounded-full bg-indigo-600 hover:bg-indigo-700"
+                  className="absolute bottom-2 end-2 h-8 w-8 rounded-full bg-indigo-600 hover:bg-indigo-700"
                 >
                   {isPosting ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -479,7 +479,7 @@ export default function LessonDetailPage({
       {/* ── Floating AI Chat Button ── */}
       <button
         onClick={() => setChatOpen(true)}
-        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-500 shadow-2xl shadow-indigo-900/50 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+        className="fixed bottom-6 end-6 z-40 h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-500 shadow-2xl shadow-indigo-900/50 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
         aria-label="Open AI Chat"
       >
         <Bot className="h-6 w-6 text-white" />
@@ -487,7 +487,7 @@ export default function LessonDetailPage({
 
       {/* ── AI Chat Panel ── */}
       <div
-        className={`fixed top-0 right-0 bottom-0 z-50 w-full sm:w-96 bg-slate-950 border-l border-slate-800 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 end-0 bottom-0 z-50 w-full sm:w-96 bg-slate-950 border-s border-slate-800 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
           chatOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

@@ -95,7 +95,7 @@ export default function AdminAnalyticsPage() {
               <div className="flex items-center gap-1 mt-0.5">
                 <ArrowUpRight className="h-3 w-3 text-emerald-400" />
                 <span className="text-xs text-emerald-400 font-medium">{change}</span>
-                <span className="text-xs text-slate-600 ml-1">{label}</span>
+                <span className="text-xs text-slate-600 ms-1">{label}</span>
               </div>
             </div>
           </div>
@@ -207,7 +207,7 @@ export default function AdminAnalyticsPage() {
           <div className="p-5 space-y-3">
             {TOP_COURSES.map((c, i) => (
               <div key={c.title} className="flex items-center gap-3">
-                <span className="text-xs font-bold text-slate-500 w-5 text-right tabular-nums">
+                <span className="text-xs font-bold text-slate-500 w-5 text-end tabular-nums">
                   #{i + 1}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -221,7 +221,7 @@ export default function AdminAnalyticsPage() {
                     />
                   </div>
                 </div>
-                <span className="text-xs font-semibold text-amber-400 tabular-nums w-8 text-right">
+                <span className="text-xs font-semibold text-amber-400 tabular-nums w-8 text-end">
                   {c.enrolled}
                 </span>
               </div>
@@ -241,19 +241,19 @@ export default function AdminAnalyticsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-800">
-                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="text-start px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     Student
                   </th>
-                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">
+                  <th className="text-start px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">
                     Course
                   </th>
-                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="text-start px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">
+                  <th className="text-start px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">
                     Date
                   </th>
-                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="text-start px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     Status
                   </th>
                 </tr>

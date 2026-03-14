@@ -35,7 +35,7 @@ export default function CourseCard({ course, isEnrolled }: CourseCardProps) {
           <Music className="h-12 w-12 text-slate-300" />
         )}
         
-        <div className="absolute top-2 right-2 flex gap-2">
+        <div className="absolute top-2 end-2 flex gap-2">
           {isEnrolled && (
             <Badge className="bg-green-500 hover:bg-green-600 flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3" /> Enrolled

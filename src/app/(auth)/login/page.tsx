@@ -94,7 +94,7 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleEmailLogin} className="space-y-4">
-          <div className="space-y-2 text-left">
+          <div className="space-y-2 text-start">
             <label className="text-sm font-semibold text-slate-900">Email Address</label>
             <input 
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background md:text-sm"
@@ -103,7 +103,7 @@ export default function LoginPage() {
               required
             />
           </div>
-          <div className="space-y-2 text-left">
+          <div className="space-y-2 text-start">
             <label className="text-sm font-semibold text-slate-900">Password</label>
             <input 
               type="password"
@@ -120,7 +120,7 @@ export default function LoginPage() {
             className="w-full bg-accent hover:bg-accent/90 text-white h-12 text-base mt-2"
           >
             {isLoading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <Loader2 className="me-2 h-5 w-5 animate-spin" />
             ) : "Sign in / Register"}
           </Button>
 

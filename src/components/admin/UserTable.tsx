@@ -73,12 +73,12 @@ export default function UserTable() {
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Search by name or email..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-            className="pl-10"
+            className="ps-10"
           />
         </div>
       </div>
@@ -94,12 +94,12 @@ export default function UserTable() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-slate-50">
-                <th className="text-left px-6 py-3 font-semibold text-slate-600">User</th>
-                <th className="text-left px-6 py-3 font-semibold text-slate-600">Email</th>
-                <th className="text-left px-6 py-3 font-semibold text-slate-600">Role</th>
-                <th className="text-left px-6 py-3 font-semibold text-slate-600">Joined</th>
-                <th className="text-left px-6 py-3 font-semibold text-slate-600">Status</th>
-                <th className="text-left px-6 py-3 font-semibold text-slate-600">Actions</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-600">User</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-600">Email</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-600">Role</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-600">Joined</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-600">Status</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-600">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -140,7 +140,7 @@ export default function UserTable() {
                         className="text-red-500 border-red-200 hover:bg-red-50"
                         onClick={() => setConfirmAction({ userId: u.id, action: "suspend" })}
                       >
-                        <ShieldAlert className="mr-1 h-3 w-3" /> Suspend
+                        <ShieldAlert className="me-1 h-3 w-3" /> Suspend
                       </Button>
                     )}
                   </td>
@@ -153,11 +153,11 @@ export default function UserTable() {
 
       <div className="flex items-center justify-between">
         <Button variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>
-          <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+          <ChevronLeft className="h-4 w-4 me-1" /> Previous
         </Button>
         <span className="text-sm text-slate-500">Page {page + 1}</span>
         <Button variant="outline" disabled={users.length < PAGE_SIZE} onClick={() => setPage(page + 1)}>
-          Next <ChevronRight className="h-4 w-4 ml-1" />
+          Next <ChevronRight className="h-4 w-4 ms-1" />
         </Button>
       </div>
     </div>

@@ -196,7 +196,7 @@ export default async function StudentDashboardPage() {
               asChild
             >
               <Link href="/student/courses">
-                Browse all <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                Browse all <ArrowRight className="ms-1 h-3.5 w-3.5" />
               </Link>
             </Button>
           </div>
@@ -319,7 +319,7 @@ export default async function StudentDashboardPage() {
             >
               <Link href="/student/dashboard">
                 View all pending{" "}
-                <Badge className="ml-2 bg-amber-600 hover:bg-amber-700 text-white text-xs px-1.5 h-4">
+                <Badge className="ms-2 bg-amber-600 hover:bg-amber-700 text-white text-xs px-1.5 h-4">
                   {pendingAssignments.length}
                 </Badge>
               </Link>

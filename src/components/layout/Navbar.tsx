@@ -6,6 +6,8 @@ import { signOut } from "@/lib/insforge/auth";
 import { createClient } from "@/lib/supabase/client";
 import { Music, LogOut, User, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useI18n } from "@/lib/i18n/context";
 
 interface NavbarProps {
   user: {
@@ -19,6 +21,7 @@ interface NavbarProps {
 export default function Navbar({ user }: NavbarProps) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useI18n();
   
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -90,7 +93,8 @@ export default function Navbar({ user }: NavbarProps) {
           <span>Music Academy</span>
         </div>
         
-        <div className="ml-auto flex items-center space-x-2 md:space-x-4">
+        <div className="ms-auto flex items-center space-x-2 md:space-x-4">
+          <LanguageSwitcher />
           
           {/* Notification Bell */}
           <div className="relative">
@@ -100,7 +104,7 @@ export default function Navbar({ user }: NavbarProps) {
             >
               <Bell className="h-5 w-5 text-white/90" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-primary">
+                <span className="absolute top-1 end-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-primary">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -108,7 +112,7 @@ export default function Navbar({ user }: NavbarProps) {
 
             {/* Notification Dropdown */}
             {isOpen && (
-              <div className="absolute right-0 mt-2 w-80 rounded-xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden z-50 text-slate-900 border">
+              <div className="absolute end-0 mt-2 w-80 rounded-xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden z-50 text-slate-900 border">
                 <div className="flex items-center justify-between border-b bg-slate-50 px-4 py-3">
                   <h3 className="font-semibold">Notifications</h3>
                   {unreadCount > 0 && (
@@ -128,7 +132,7 @@ export default function Navbar({ user }: NavbarProps) {
                         <button
                           key={n.id}
                           onClick={() => handleNotificationClick(n)}
-                          className={`flex flex-col gap-1 p-4 border-b text-left transition-colors hover:bg-slate-50 ${!n.is_read ? 'bg-sky-50/50' : ''}`}
+                          className={`flex flex-col gap-1 p-4 border-b text-start transition-colors hover:bg-slate-50 ${!n.is_read ? 'bg-sky-50/50' : ''}`}
                         >
                           <div className="flex justify-between items-start w-full gap-2">
                             <span className={`text-sm ${!n.is_read ? 'font-semibold text-slate-900' : 'text-slate-600'}`}>
@@ -156,7 +160,7 @@ export default function Navbar({ user }: NavbarProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-3 pl-2">
+          <div className="flex items-center gap-3 ps-2">
             <div className="flex flex-col items-end">
               <span className="text-sm font-medium leading-none">
                 {user.full_name || "User"}
@@ -184,8 +188,8 @@ export default function Navbar({ user }: NavbarProps) {
             onClick={() => signOut()}
             className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors hover:bg-white/10 text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
           >
-            <LogOut className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">Sign Out</span>
+            <LogOut className="h-4 w-4 md:me-2" />
+            <span className="hidden md:inline">{t('shell.logout')}</span>
           </button>
         </div>
       </div>

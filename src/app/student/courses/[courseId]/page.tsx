@@ -127,7 +127,7 @@ export default function CourseDetailPage({
           className="mt-4 text-slate-400 hover:text-white"
           onClick={() => router.push("/student/courses")}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Catalog
+          <ArrowLeft className="me-2 h-4 w-4" /> Back to Catalog
         </Button>
       </div>
     );
@@ -143,7 +143,7 @@ export default function CourseDetailPage({
         href="/student/courses"
         className="inline-flex items-center text-sm text-slate-400 hover:text-white transition-colors mb-6"
       >
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Courses
+        <ArrowLeft className="me-2 h-4 w-4" /> Back to Courses
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -344,7 +344,7 @@ export default function CourseDetailPage({
                 >
                   {checkoutLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
                       Processing...
                     </>
                   ) : (

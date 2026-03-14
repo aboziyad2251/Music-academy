@@ -179,21 +179,21 @@ export default function TeacherStudentsPage() {
         </select>
 
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
           <Input
             placeholder="Search students..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-slate-900 border-slate-700 text-slate-200 placeholder:text-slate-500"
+            className="ps-10 bg-slate-900 border-slate-700 text-slate-200 placeholder:text-slate-500"
           />
         </div>
 
-        <div className="flex gap-2 ml-auto">
+        <div className="flex gap-2 ms-auto">
           <Button variant="outline" onClick={exportCSV} className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
-            <Download className="mr-2 h-4 w-4" /> Export CSV
+            <Download className="me-2 h-4 w-4" /> Export CSV
           </Button>
           <Button variant="outline" onClick={exportPDF} className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
-            <Printer className="mr-2 h-4 w-4" /> Export PDF
+            <Printer className="me-2 h-4 w-4" /> Export PDF
           </Button>
         </div>
       </div>
@@ -209,11 +209,11 @@ export default function TeacherStudentsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-800 bg-slate-950/50">
-                <th className="text-left px-6 py-3 font-semibold text-slate-400">Name</th>
-                <th className="text-left px-6 py-3 font-semibold text-slate-400 hidden md:table-cell">Lessons</th>
-                <th className="text-left px-6 py-3 font-semibold text-slate-400 hidden md:table-cell">Assignments</th>
-                <th className="text-left px-6 py-3 font-semibold text-slate-400">Avg Score</th>
-                <th className="text-left px-6 py-3 font-semibold text-slate-400 hidden lg:table-cell">Last Active</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-400">Name</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-400 hidden md:table-cell">Lessons</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-400 hidden md:table-cell">Assignments</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-400">Avg Score</th>
+                <th className="text-start px-6 py-3 font-semibold text-slate-400 hidden lg:table-cell">Last Active</th>
                 <th className="w-10"></th>
               </tr>
             </thead>

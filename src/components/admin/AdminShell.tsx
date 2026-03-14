@@ -140,7 +140,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
   return (
     <div className="flex h-screen bg-slate-950 overflow-hidden">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0">
+      <aside className="hidden lg:flex lg:flex-col w-64 bg-slate-900 border-e border-slate-800 flex-shrink-0">
         <SidebarInner />
       </aside>
 
@@ -151,10 +151,10 @@ export default function AdminShell({ user, children }: AdminShellProps) {
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-10">
+          <aside className="absolute start-0 top-0 bottom-0 w-64 bg-slate-900 border-e border-slate-800 flex flex-col z-10">
             <button
               onClick={() => setSidebarOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
+              className="absolute top-4 end-4 p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
             >
               <X className="h-4 w-4" />
             </button>

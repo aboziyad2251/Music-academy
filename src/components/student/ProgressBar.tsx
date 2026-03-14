@@ -38,7 +38,7 @@ export default function ProgressBar({
       />
       
       {!hideText && (
-        <div className="text-right text-xs text-slate-400 font-semibold mt-1">
+        <div className="text-end text-xs text-slate-400 font-semibold mt-1">
           {clampedPercentage}%
         </div>
       )}

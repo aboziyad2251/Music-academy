@@ -106,10 +106,10 @@ export default function Analytics() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-slate-50/50">
-              <th className="text-left px-6 py-3 font-semibold text-slate-600">Student</th>
-              <th className="text-left px-6 py-3 font-semibold text-slate-600">Course</th>
-              <th className="text-left px-6 py-3 font-semibold text-slate-600">Amount</th>
-              <th className="text-left px-6 py-3 font-semibold text-slate-600">Date</th>
+              <th className="text-start px-6 py-3 font-semibold text-slate-600">Student</th>
+              <th className="text-start px-6 py-3 font-semibold text-slate-600">Course</th>
+              <th className="text-start px-6 py-3 font-semibold text-slate-600">Amount</th>
+              <th className="text-start px-6 py-3 font-semibold text-slate-600">Date</th>
             </tr>
           </thead>
           <tbody>

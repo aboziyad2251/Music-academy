@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server";
+import { getServerI18n } from "@/lib/i18n/server";
 import Link from "next/link";
 import {
   Users,
@@ -32,6 +33,8 @@ export default async function AdminDashboardPage() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return null;
 
+  const { t } = await getServerI18n();
+
   const [
     { count: totalUsers },
     { count: totalTeachers },
@@ -61,7 +64,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8 pb-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-          Admin Control Panel
+          Admin {t("shell.dashboard")}
         </h1>
         <p className="text-slate-400 mt-1 text-sm">Full platform overview and management.</p>
       </div>
@@ -94,17 +97,17 @@ export default async function AdminDashboardPage() {
               <span className="font-semibold text-white text-sm">Recent Signups</span>
             </div>
             <Button variant="ghost" size="sm" className="text-amber-400 hover:text-amber-300 hover:bg-amber-950/50 h-7 text-xs" asChild>
-              <Link href="/admin/users">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
+              <Link href="/admin/users">View all <ArrowRight className="ms-1 h-3 w-3" /></Link>
             </Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-800">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Email</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Joined</th>
+                  <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
+                  <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Email</th>
+                  <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                  <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Joined</th>
                 </tr>
               </thead>
               <tbody>
@@ -166,12 +169,12 @@ export default async function AdminDashboardPage() {
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Quick Actions</p>
             <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm h-9" asChild>
               <Link href="/admin/users">
-                <Users className="mr-2 h-4 w-4" /> Manage Users
+                <Users className="me-2 h-4 w-4" /> Manage Users
               </Link>
             </Button>
             <Button className="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm h-9" asChild>
               <Link href="/admin/courses">
-                <BookOpen className="mr-2 h-4 w-4" /> Moderate Courses
+                <BookOpen className="me-2 h-4 w-4" /> Moderate Courses
               </Link>
             </Button>
           </div>

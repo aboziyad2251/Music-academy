@@ -158,7 +158,7 @@ export default function AddAssignmentPage({ params }: { params: { courseId: stri
 
           <div className="pt-6 border-t">
             <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={submitting}>
-              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+              {submitting ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <PlusCircle className="me-2 h-4 w-4" />}
               {submitting ? "Creating..." : "Create Assignment"}
             </Button>
           </div>

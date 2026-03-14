@@ -197,7 +197,7 @@ export default function AdminCreateCoursePage() {
                   <span>{previewUrl ? "Change Image" : "Upload a file"}</span>
                   <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
                 </label>
-                <p className="pl-1 mt-1">or drag and drop</p>
+                <p className="ps-1 mt-1">or drag and drop</p>
               </div>
               <p className="text-xs leading-5 text-slate-600 mt-2">PNG, JPG, GIF up to 5MB</p>
             </div>
@@ -255,13 +255,13 @@ export default function AdminCreateCoursePage() {
         <div className="space-y-2">
           <label className="text-sm font-semibold text-slate-300">Price (USD) <span className="text-red-400">*</span></label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+            <span className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
             <Input
               type="number"
               min="0"
               step="0.01"
               placeholder="0.00"
-              className="pl-7 bg-slate-950 border-slate-700 text-white placeholder:text-slate-600"
+              className="ps-7 bg-slate-950 border-slate-700 text-white placeholder:text-slate-600"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               required
@@ -271,7 +271,7 @@ export default function AdminCreateCoursePage() {
 
         <div className="pt-6 border-t border-slate-800">
           <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" disabled={loading}>
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
+            {loading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <UploadCloud className="me-2 h-4 w-4" />}
             {loading ? "Creating Course..." : "Create Course"}
           </Button>
         </div>

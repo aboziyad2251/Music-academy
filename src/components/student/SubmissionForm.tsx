@@ -181,7 +181,7 @@ export default function SubmissionForm({ assignmentId, studentId, onSuccess }: S
             className="w-full bg-accent hover:bg-accent/90"
           >
             {isUploading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
+              <><Loader2 className="me-2 h-4 w-4 animate-spin" /> Uploading...</>
             ) : "Submit Assignment" }
           </Button>
         </CardFooter>

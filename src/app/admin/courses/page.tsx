@@ -122,9 +122,9 @@ export default function AdminCoursesPage() {
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <div className="relative w-full sm:max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
             <Input placeholder="Search courses or teachers..." value={search} onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-slate-900 border-slate-700 text-slate-200 placeholder:text-slate-500" />
+              className="ps-10 bg-slate-900 border-slate-700 text-slate-200 placeholder:text-slate-500" />
           </div>
           <Link href="/admin/courses/new">
             <Button className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto">
@@ -140,12 +140,12 @@ export default function AdminCoursesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-800 bg-slate-950/50">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Course Title</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Teacher</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell"><div className="flex items-center gap-1"><Users className="h-3 w-3" /> Enrolled</div></th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell"><div className="flex items-center gap-1"><DollarSign className="h-3 w-3" /> Revenue</div></th>
-                <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Course Title</th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Teacher</th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell"><div className="flex items-center gap-1"><Users className="h-3 w-3" /> Enrolled</div></th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell"><div className="flex items-center gap-1"><DollarSign className="h-3 w-3" /> Revenue</div></th>
+                <th className="text-end px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>

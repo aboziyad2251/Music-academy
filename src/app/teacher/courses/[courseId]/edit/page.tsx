@@ -146,15 +146,15 @@ export default function EditCoursePage({ params }: { params: { courseId: string 
         <div className="space-y-2">
           <label className="text-sm font-semibold text-slate-300">Price (USD) <span className="text-red-400">*</span></label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+            <span className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
             <Input type="number" min="0" step="0.01" placeholder="0.00"
-              className="pl-7 bg-slate-950 border-slate-700 text-white placeholder:text-slate-600"
+              className="ps-7 bg-slate-950 border-slate-700 text-white placeholder:text-slate-600"
               value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} required />
           </div>
         </div>
         <div className="pt-6 border-t border-slate-800">
           <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" disabled={saving}>
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {saving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>

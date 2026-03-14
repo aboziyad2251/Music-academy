@@ -77,18 +77,18 @@ export default function TeacherCoursesPage() {
         </div>
         <Link href="/teacher/courses/new">
           <Button className="bg-accent hover:bg-accent/90">
-            <PlusCircle className="mr-2 h-4 w-4" /> Create New Course
+            <PlusCircle className="me-2 h-4 w-4" /> Create New Course
           </Button>
         </Link>
       </div>
 
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
         <Input 
           placeholder="Search your courses..." 
           value={search} 
           onChange={(e) => setSearch(e.target.value)} 
-          className="pl-10" 
+          className="ps-10" 
         />
       </div>
 
@@ -115,10 +115,10 @@ export default function TeacherCoursesPage() {
                      <ImageIcon className="h-10 w-10 opacity-50" />
                    </div>
                  )}
-                 <div className="absolute top-3 left-3">
+                 <div className="absolute top-3 start-3">
                    {statusBadge(c.status)}
                  </div>
-                 <div className="absolute top-3 right-3">
+                 <div className="absolute top-3 end-3">
                    <Badge className="bg-black/70 text-white border-0">${c.price || 0}</Badge>
                  </div>
                </div>
@@ -141,7 +141,7 @@ export default function TeacherCoursesPage() {
                  <div className="flex items-center gap-2 mt-4">
                    <Link href={`/teacher/courses/${c.id}`} className="flex-1">
                      <Button variant="outline" className="w-full group-hover:bg-accent group-hover:text-white transition-colors">
-                       <Edit className="mr-2 h-4 w-4" /> Manage
+                       <Edit className="me-2 h-4 w-4" /> Manage
                      </Button>
                    </Link>
                    <Button variant="outline" onClick={() => handleDelete(c.id)} className="px-3 border-red-200 text-red-500 hover:bg-red-50">

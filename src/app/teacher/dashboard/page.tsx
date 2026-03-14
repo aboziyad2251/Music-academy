@@ -166,7 +166,7 @@ export default async function TeacherDashboardPage() {
         </div>
         <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" asChild>
           <Link href="/teacher/courses/new">
-            <PlusCircle className="mr-2 h-4 w-4" /> New Course
+            <PlusCircle className="me-2 h-4 w-4" /> New Course
           </Link>
         </Button>
       </div>
@@ -202,7 +202,7 @@ export default async function TeacherDashboardPage() {
               asChild
             >
               <Link href="/teacher/courses">
-                View all <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                View all <ArrowRight className="ms-1 h-3.5 w-3.5" />
               </Link>
             </Button>
           </div>
@@ -317,7 +317,7 @@ export default async function TeacherDashboardPage() {
                   asChild
                 >
                   <Link href="/teacher/grades">
-                    Grade submissions <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                    Grade submissions <ArrowRight className="ms-1 h-3.5 w-3.5" />
                   </Link>
                 </Button>
               </div>

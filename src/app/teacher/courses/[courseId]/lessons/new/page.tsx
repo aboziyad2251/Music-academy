@@ -164,7 +164,7 @@ export default function AddLessonPage({ params }: { params: { courseId: string }
                   <span>{file ? file.name : "Upload a file"}</span>
                   <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} disabled={loading} accept="video/mp4,video/webm,audio/mpeg,audio/wav,application/pdf" />
                 </label>
-                {!file && <p className="pl-1 mt-1">or drag and drop</p>}
+                {!file && <p className="ps-1 mt-1">or drag and drop</p>}
               </div>
               <p className="text-xs leading-5 text-slate-500 mt-2">MP4, WEBM, MP3, WAV or PDF</p>
             </div>
@@ -183,7 +183,7 @@ export default function AddLessonPage({ params }: { params: { courseId: string }
 
         <div className="pt-6 border-t">
           <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={loading}>
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
+            {loading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <UploadCloud className="me-2 h-4 w-4" />}
             {loading ? "Publishing Lesson..." : "Publish Lesson"}
           </Button>
         </div>

@@ -139,7 +139,7 @@ export default function TeacherShell({ user, ungradedCount, children }: TeacherS
   return (
     <div className="flex h-screen bg-slate-950 overflow-hidden">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0">
+      <aside className="hidden lg:flex lg:flex-col w-64 bg-slate-900 border-e border-slate-800 flex-shrink-0">
         <SidebarInner />
       </aside>
 
@@ -150,10 +150,10 @@ export default function TeacherShell({ user, ungradedCount, children }: TeacherS
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-10">
+          <aside className="absolute start-0 top-0 bottom-0 w-64 bg-slate-900 border-e border-slate-800 flex flex-col z-10">
             <button
               onClick={() => setSidebarOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
+              className="absolute top-4 end-4 p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
             >
               <X className="h-4 w-4" />
             </button>
@@ -185,7 +185,7 @@ export default function TeacherShell({ user, ungradedCount, children }: TeacherS
             <button className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
               <Bell className="h-5 w-5" />
               {ungradedCount > 0 && (
-                <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-slate-900">
+                <span className="absolute top-1 end-1 h-4 w-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-slate-900">
                   {ungradedCount > 9 ? "9+" : ungradedCount}
                 </span>
               )}

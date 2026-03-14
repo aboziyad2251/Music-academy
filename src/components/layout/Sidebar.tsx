@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/lib/i18n/context";
 
 interface SidebarProps {
   role: "student" | "teacher" | "admin";
@@ -27,26 +28,24 @@ const getLinksForRole = (role: string) => {
   switch (role) {
     case "student":
       return [
-        { title: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
-        { title: "My Courses", href: "/student/courses", icon: BookOpen },
-        { title: "Browse Courses", href: "/courses", icon: Library },
-        { title: "My Progress", href: "/student/progress", icon: Target },
+        { title: "shell.dashboard", href: "/student/dashboard", icon: LayoutDashboard },
+        { title: "shell.courses", href: "/student/courses", icon: BookOpen },
+        { title: "shell.courses", href: "/courses", icon: Library }, // using 'shell.courses' or could be 'shell.browseCourses'
       ];
     case "teacher":
       return [
-        { title: "Dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },
-        { title: "My Courses", href: "/teacher/courses", icon: Library },
-        { title: "Create Course", href: "/teacher/courses/new", icon: PlusCircle },
-        { title: "My Students", href: "/teacher/students", icon: Users },
-        { title: "Grades", href: "/teacher/grades", icon: GraduationCap, badgeKey: "grades" },
+        { title: "shell.dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },
+        { title: "shell.courses", href: "/teacher/courses", icon: Library },
+        { title: "shell.create", href: "/teacher/courses/new", icon: PlusCircle },
+        { title: "shell.students", href: "/teacher/students", icon: Users },
+        { title: "shell.assignments", href: "/teacher/grades", icon: GraduationCap, badgeKey: "grades" },
       ];
     case "admin":
       return [
-        { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-        { title: "Users", href: "/admin/users", icon: Users },
-        { title: "All Courses", href: "/admin/courses", icon: Library },
-        { title: "Analytics", href: "/admin/analytics", icon: BarChart },
-        { title: "Settings", href: "/admin/settings", icon: Settings },
+        { title: "shell.dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+        { title: "shell.users", href: "/admin/users", icon: Users },
+        { title: "shell.courses", href: "/admin/courses", icon: Library },
+        { title: "shell.settings", href: "/admin/settings", icon: Settings },
       ];
     default:
       return [];
@@ -55,6 +54,7 @@ const getLinksForRole = (role: string) => {
 
 export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const links = getLinksForRole(role);
   const [isOpen, setIsOpen] = useState(false);
   const [ungradedCount, setUngradedCount] = useState(0);
@@ -108,7 +108,7 @@ export default function Sidebar({ role }: SidebarProps) {
   return (
     <>
       <button 
-        className="md:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-accent text-white shadow-lg flex items-center justify-center transition-transform active:scale-95"
+        className="md:hidden fixed bottom-6 end-6 z-50 h-14 w-14 rounded-full bg-accent text-white shadow-lg flex items-center justify-center transition-transform active:scale-95"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -124,7 +124,7 @@ export default function Sidebar({ role }: SidebarProps) {
 
       <aside 
         className={cn(
-          "fixed md:sticky top-16 z-40 h-[calc(100vh-4rem)] w-64 flex-col border-r bg-white transition-transform duration-300 ease-in-out md:translate-x-0",
+          "fixed md:sticky top-16 z-40 h-[calc(100vh-4rem)] w-64 flex-col border-e bg-white transition-transform duration-300 ease-in-out md:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -148,9 +148,9 @@ export default function Sidebar({ role }: SidebarProps) {
                   )}
                 >
                   <Icon className={cn("h-5 w-5", isActive ? "text-accent" : "text-slate-500")} />
-                  {link.title}
+                  {t(link.title)}
                   {showBadge && (
-                    <span className="ml-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                    <span className="ms-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
                       {ungradedCount > 99 ? "99+" : ungradedCount}
                     </span>
                   )}

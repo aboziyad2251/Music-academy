@@ -235,9 +235,9 @@ export default function GradingPanel({ teacherId }: GradingPanelProps) {
                   className="border-accent/30 text-accent hover:bg-accent/10"
                 >
                   {aiLoading ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
+                    <><Loader2 className="me-2 h-4 w-4 animate-spin" /> Generating...</>
                   ) : (
-                    <><Sparkles className="mr-2 h-4 w-4" /> Get AI Suggestion</>
+                    <><Sparkles className="me-2 h-4 w-4" /> Get AI Suggestion</>
                   )}
                 </Button>
 
@@ -275,7 +275,7 @@ export default function GradingPanel({ teacherId }: GradingPanelProps) {
                 disabled={!score || grading}
                 className="w-full bg-accent hover:bg-accent/90"
               >
-                {grading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                {grading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="me-2 h-4 w-4" />}
                 Submit Grade
               </Button>
             </CardFooter>

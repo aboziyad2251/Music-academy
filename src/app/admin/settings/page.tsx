@@ -94,9 +94,9 @@ export default function AdminSettingsPage() {
                   <p className="text-xs text-slate-500 truncate">{desc}</p>
                 </div>
               </div>
-              <div className="flex-shrink-0 ml-4">
+              <div className="flex-shrink-0 ms-4">
                 <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${settings[key] ? "bg-amber-600" : "bg-slate-700"}`}>
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${settings[key] ? "translate-x-5" : "translate-x-0"}`} />
+                  <div className={`absolute top-0.5 start-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${settings[key] ? "translate-x-5" : "translate-x-0"}`} />
                   <input type="checkbox" className="sr-only" checked={settings[key]} onChange={(e) => setSettings({ ...settings, [key]: e.target.checked })} />
                 </div>
               </div>
@@ -123,7 +123,7 @@ export default function AdminSettingsPage() {
       </div>
 
       <Button onClick={handleSave} disabled={saving} className="w-full bg-amber-600 hover:bg-amber-700 text-white h-11 text-sm font-semibold">
-        {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        {saving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
         {saving ? "Saving..." : "Save Settings"}
       </Button>
     </div>

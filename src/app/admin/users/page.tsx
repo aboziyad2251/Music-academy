@@ -249,7 +249,7 @@ export default function AdminUsersPage() {
                   Cancel
                 </Button>
                 <Button type="submit" className="bg-amber-600 hover:bg-amber-700 text-white" disabled={adding}>
-                  {adding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+                  {adding ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <UserPlus className="h-4 w-4 me-2" />}
                   Create User
                 </Button>
               </div>
@@ -266,19 +266,19 @@ export default function AdminUsersPage() {
         </div>
         <Button onClick={() => setShowAddModal(true)}
           className="bg-amber-600 hover:bg-amber-700 text-white">
-          <UserPlus className="h-4 w-4 mr-2" /> Add User
+          <UserPlus className="h-4 w-4 me-2" /> Add User
         </Button>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
           <Input
             placeholder="Search name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-slate-900 border-slate-700 text-slate-200 placeholder:text-slate-500"
+            className="ps-10 bg-slate-900 border-slate-700 text-slate-200 placeholder:text-slate-500"
           />
         </div>
         <div className="flex gap-1.5">
@@ -299,12 +299,12 @@ export default function AdminUsersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-800 bg-slate-950/50">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Email</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Status</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Joined</th>
-                <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Email</th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Status</th>
+                <th className="text-start px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Joined</th>
+                <th className="text-end px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
