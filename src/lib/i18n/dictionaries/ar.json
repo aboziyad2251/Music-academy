@@ -1,0 +1,39 @@
+{
+  "auth": {
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "signIn": "دخول",
+    "registerNew": "حساب جديد"
+  },
+  "shell": {
+    "dashboard": "لوحة التحكم",
+    "courses": "الدورات",
+    "lessons": "الدروس",
+    "assignments": "الواجبات",
+    "messages": "الرسائل",
+    "students": "الطلاب",
+    "settings": "الإعدادات",
+    "users": "المستخدمين",
+    "logout": "تسجيل الخروج",
+    "studentPortal": "بوابة الطالب",
+    "teacherPortal": "بوابة المعلم",
+    "adminPortal": "بوابة المشرف",
+    "welcomeBack": "أهلاً بك،",
+    "createCourse": "إضافة دورة",
+    "grades": "الدرجات",
+    "analytics": "الإحصائيات",
+    "myStudents": "طلابي",
+    "allCourses": "جميع الدورات"
+  },
+  "common": {
+    "save": "حفظ التغييرات",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "create": "إنشاء",
+    "search": "بحث...",
+    "loading": "جاري التحميل..."
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email Address",
+    "password": "Password",
+    "signIn": "Sign In",
+    "registerNew": "Create Account"
+  },
+  "shell": {
+    "dashboard": "Dashboard",
+    "courses": "Courses",
+    "lessons": "Lessons",
+    "assignments": "Assignments",
+    "messages": "Messages",
+    "students": "Students",
+    "settings": "Settings",
+    "users": "Users",
+    "logout": "Log out",
+    "studentPortal": "Student Portal",
+    "teacherPortal": "Teacher Portal",
+    "adminPortal": "Admin Portal",
+    "welcomeBack": "Welcome back,",
+    "createCourse": "Create Course",
+    "grades": "Grades",
+    "analytics": "Analytics",
+    "myStudents": "My Students",
+    "allCourses": "All Courses"
+  },
+  "common": {
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search...",
+    "loading": "Loading..."
+  }
+}

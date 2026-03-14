@@ -1,332 +1,327 @@
-import { createServerClient } from "@/lib/supabase/server";
-import CourseCard from "@/components/student/CourseCard";
-import ProgressBar from "@/components/student/ProgressBar";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  BookOpen,
-  CheckCircle2,
-  ClipboardList,
-  Flame,
-  ArrowRight,
-  Activity,
-  CalendarDays,
-  Clock,
-} from "lucide-react";
+"use client";
 
-const STAT_CONFIG = [
-  {
-    key: "enrolledCourses",
-    label: "Enrolled Courses",
-    icon: BookOpen,
-    color: "text-indigo-400",
-    bg: "bg-indigo-950/60",
-    border: "border-indigo-800/40",
-  },
-  {
-    key: "completedLessons",
-    label: "Completed Lessons",
-    icon: CheckCircle2,
-    color: "text-emerald-400",
-    bg: "bg-emerald-950/60",
-    border: "border-emerald-800/40",
-  },
-  {
-    key: "pendingAssignments",
-    label: "Pending Assignments",
-    icon: ClipboardList,
-    color: "text-amber-400",
-    bg: "bg-amber-950/60",
-    border: "border-amber-800/40",
-  },
-  {
-    key: "dayStreak",
-    label: "Day Streak",
-    icon: Flame,
-    color: "text-orange-400",
-    bg: "bg-orange-950/60",
-    border: "border-orange-800/40",
-  },
-] as const;
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { PlayCircle, Clock, BookOpen, Trophy, Flame, ChevronLeft } from "lucide-react";
 
-export default async function StudentDashboardPage() {
-  const supabase = createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
+interface ProgressData {
+  lessonsCompleted: number;
+  practiceHours: number;
+  maqamLevel: string;
+  pointsEarned: number;
+  dayStreak: number;
+  unlockedMaqamat: string[];
+  recentActivity: Array<{ action: string; date: string }>;
+}
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", session.user.id)
-    .single();
+interface ActiveCourseData {
+  id: string;
+  title: string;
+  teacher: string;
+  nextLesson: string;
+  progressPct: number;
+}
 
-  const { data: enrollments } = await supabase
-    .from("enrollments")
-    .select(`
-      course_id, enrolled_at,
-      course:courses (
-        id, title, thumbnail_url, price, category, level,
-        teacher:teacher_id(full_name)
-      )
-    `)
-    .eq("student_id", session.user.id)
-    .order("enrolled_at", { ascending: false });
+const MAQAM_NODES = ["راست", "بياتي", "حجاز", "صبا", "كرد"];
 
-  const { data: completedProgress } = await supabase
-    .from("lesson_progress")
-    .select("id, lesson_id, updated_at")
-    .eq("student_id", session.user.id)
-    .eq("completed", true)
-    .order("updated_at", { ascending: false });
+export default function StudentDashboard() {
+  const [userName, setUserName] = useState("طالب");
+  const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [course, setCourse] = useState<ActiveCourseData | null>(null);
+  const supabase = createClient();
 
-  const courseIds = enrollments?.map((e: any) => e.course_id) ?? [];
-  let courseProgressMap: Record<string, { total: number; completed: number }> = {};
-  let pendingAssignments: any[] = [];
-
-  if (courseIds.length > 0) {
-    const { data: allLessons } = await supabase
-      .from("lessons")
-      .select("id, course_id")
-      .in("course_id", courseIds);
-
-    const { data: userProgress } = await supabase
-      .from("lesson_progress")
-      .select("lesson_id")
-      .eq("student_id", session.user.id)
-      .eq("completed", true);
-
-    const completedSet = new Set(userProgress?.map((p: any) => p.lesson_id));
-
-    allLessons?.forEach((lesson: any) => {
-      if (!courseProgressMap[lesson.course_id]) {
-        courseProgressMap[lesson.course_id] = { total: 0, completed: 0 };
+  useEffect(() => {
+    // Fetch user profile
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", session.user.id)
+          .single();
+        if (data?.full_name) {
+          setUserName(data.full_name.split(" ")[0]);
+        }
       }
-      courseProgressMap[lesson.course_id].total += 1;
-      if (completedSet.has(lesson.id)) courseProgressMap[lesson.course_id].completed += 1;
-    });
+    };
 
-    if (allLessons && allLessons.length > 0) {
-      const lessonIds = allLessons.map((l: any) => l.id);
-      const { data: allAssignments } = await supabase
-        .from("assignments")
-        .select("*, lesson:lesson_id(course_id, title)")
-        .in("lesson_id", lessonIds)
-        .order("due_date", { ascending: true });
-
-      if (allAssignments && allAssignments.length > 0) {
-        const { data: submitted } = await supabase
-          .from("submissions")
-          .select("assignment_id")
-          .eq("student_id", session.user.id)
-          .in("assignment_id", allAssignments.map((a: any) => a.id));
-
-        const submittedSet = new Set(submitted?.map((s: any) => s.assignment_id) ?? []);
-        pendingAssignments = allAssignments.filter((a: any) => !submittedSet.has(a.id));
+    // Fetch mock APIs
+    const fetchMockData = async () => {
+      try {
+        const [progRes, courseRes] = await Promise.all([
+          fetch("/api/student/progress"),
+          fetch("/api/student/courses/active")
+        ]);
+        
+        if (progRes.ok) setProgress(await progRes.json());
+        if (courseRes.ok) setCourse(await courseRes.json());
+      } catch (e) {
+        console.error("Error fetching mock data", e);
       }
-    }
-  }
+    };
 
-  let dayStreak = 0;
-  if (completedProgress && completedProgress.length > 0) {
-    const activityDates = new Set(
-      completedProgress.map((p: any) => new Date(p.updated_at).toDateString())
+    fetchUser();
+    fetchMockData();
+  }, [supabase]);
+
+  if (!progress || !course) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="flex gap-2">
+          <div className="w-3 h-3 rounded-full bg-[var(--gold)] animate-bounce" />
+          <div className="w-3 h-3 rounded-full bg-[var(--gold)] animate-bounce delay-100" />
+          <div className="w-3 h-3 rounded-full bg-[var(--gold)] animate-bounce delay-200" />
+        </div>
+      </div>
     );
-    const today = new Date();
-    for (let i = 0; i < 365; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      if (activityDates.has(d.toDateString())) {
-        dayStreak++;
-      } else {
-        break;
-      }
-    }
   }
 
-  const statValues: Record<string, number> = {
-    enrolledCourses: enrollments?.length ?? 0,
-    completedLessons: completedProgress?.length ?? 0,
-    pendingAssignments: pendingAssignments.length,
-    dayStreak,
+  // Arabic Date Formatting
+  const currentDate = new Intl.DateTimeFormat('ar-EG', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(new Date());
+
+  // Helper to determine node status
+  const getNodeStatus = (maqam: string, index: number) => {
+    if (progress.unlockedMaqamat.includes(maqam)) {
+      // It's unlocked. Is it the current? We'll make the "current" the LAST unlocked one, or the NEXT locked one.
+      // Let's assume the highest index unlocked is "current"
+      const highestUnlockedIndex = Math.max(...progress.unlockedMaqamat.map(m => MAQAM_NODES.indexOf(m)));
+      if (index === highestUnlockedIndex) return 'current';
+      return 'unlocked';
+    }
+    return 'locked';
   };
 
-  const firstName = profile?.full_name?.split(" ")[0] ?? "Student";
-
   return (
-    <div className="space-y-8 pb-6">
-      {/* Welcome */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-          Welcome back, {firstName} 🎵
-        </h1>
-        <p className="text-slate-400 mt-1 text-sm">
-          Here&apos;s an overview of your learning journey.
-        </p>
+    <div className="space-y-8 pb-8 font-amiri" dir="rtl">
+      {/* 1. WELCOME BANNER */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-[var(--dark-2)] border border-[var(--dark-3)] p-6 rounded-2xl relative overflow-hidden">
+        <svg viewBox="0 0 50 50" className="absolute left-0 top-0 w-48 h-48 opacity-[0.03] pointer-events-none fill-[var(--gold)] -translate-x-10 -translate-y-10">
+          <polygon points="25,3 28,19 44,19 31,29 36,45 25,36 14,45 19,29 6,19 22,19" />
+        </svg>
+
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">مرحباً، {userName} 🎵</h1>
+          <p className="text-[var(--cream)]/60 text-lg">اليوم: {currentDate}</p>
+        </div>
+        
+        <div className="bg-[var(--dark-3)]/80 border border-[var(--gold)]/20 px-4 py-2 rounded-xl flex items-center gap-3 backdrop-blur-sm z-10 w-fit">
+          <div className="bg-orange-500/20 p-2 rounded-lg">
+            <Flame className="w-6 h-6 text-orange-400" />
+          </div>
+          <div>
+            <p className="text-xs text-[var(--cream)]/60 font-sans tracking-wide">النشاط المستمر</p>
+            <p className="text-xl font-bold text-white tracking-widest">🔥 سلسلة {progress.dayStreak} يوم</p>
+          </div>
+        </div>
       </div>
 
-      {/* Stat Cards */}
+      {/* 2. PROGRESS CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {STAT_CONFIG.map(({ key, label, icon: Icon, color, bg, border }) => (
-          <div key={key} className={`rounded-xl border ${border} ${bg} p-5 space-y-4`}>
-            <div className={`h-10 w-10 rounded-lg border ${border} bg-slate-900/60 flex items-center justify-center`}>
-              <Icon className={`h-5 w-5 ${color}`} />
+        <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] p-5 rounded-2xl hover:border-[var(--gold)]/30 transition-colors">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20">
+              <BookOpen className="w-5 h-5 text-emerald-400" />
             </div>
-            <div>
-              <div className={`text-3xl font-bold ${color} tabular-nums`}>
-                {statValues[key]}
-              </div>
-              <div className="text-xs text-slate-500 mt-0.5 leading-tight">{label}</div>
-            </div>
+            <h3 className="text-[var(--cream)]/70 text-sm">الدروس المكتملة</h3>
           </div>
-        ))}
+          <p className="text-3xl font-bold text-white">{progress.lessonsCompleted}</p>
+        </div>
+
+        <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] p-5 rounded-2xl hover:border-[var(--gold)]/30 transition-colors">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="bg-blue-500/10 p-2.5 rounded-lg border border-blue-500/20">
+              <Clock className="w-5 h-5 text-blue-400" />
+            </div>
+            <h3 className="text-[var(--cream)]/70 text-sm">وقت الممارسة</h3>
+          </div>
+          <p className="text-3xl font-bold text-white">{progress.practiceHours} <span className="text-base font-normal text-slate-500">ساعة</span></p>
+        </div>
+
+        <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] p-5 rounded-2xl hover:border-[var(--gold)]/30 transition-colors">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="bg-[var(--teal)]/10 p-2.5 rounded-lg border border-[var(--teal)]/20">
+              <svg className="w-5 h-5 text-[var(--teal)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+            </div>
+            <h3 className="text-[var(--cream)]/70 text-sm">مستوى المقام</h3>
+          </div>
+          <p className="text-3xl font-bold text-[var(--teal)]">{progress.maqamLevel}</p>
+        </div>
+
+        <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] p-5 rounded-2xl hover:border-[var(--gold)]/30 transition-colors">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="bg-[var(--gold)]/10 p-2.5 rounded-lg border border-[var(--gold)]/20">
+              <Trophy className="w-5 h-5 text-[var(--gold)]" />
+            </div>
+            <h3 className="text-[var(--cream)]/70 text-sm">النقاط المكتسبة</h3>
+          </div>
+          <p className="text-3xl font-bold text-white">{progress.pointsEarned.toLocaleString('ar-EG')}</p>
+        </div>
       </div>
 
-      {/* 3-col grid */}
       <div className="grid lg:grid-cols-3 gap-6">
+        
+        <div className="lg:col-span-2 space-y-6">
+          {/* 3. CURRENT COURSE CARD */}
+          <div className="bg-[var(--dark-2)] border-2 border-[var(--dark-3)] rounded-2xl overflow-hidden shadow-lg relative">
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[var(--teal)]/10 to-transparent pointer-events-none" />
+            
+            <div className="p-6 md:p-8 relative z-10 flex flex-col md:flex-row gap-8 items-center justify-between">
+              <div className="space-y-4 flex-1">
+                <div className="inline-block px-3 py-1 bg-[var(--gold)]/10 border border-[var(--gold)]/30 rounded-full text-[var(--gold)] text-xs font-sans tracking-wide">
+                  متابعة التعلم
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">{course.title}</h2>
+                  <p className="text-slate-400">مع {course.teacher}</p>
+                </div>
+                
+                <div className="bg-[var(--dark-3)]/50 p-4 rounded-xl border border-slate-800">
+                  <p className="text-sm text-slate-400 mb-1">الدرس القادم:</p>
+                  <p className="text-lg font-semibold text-[var(--cream)]">{course.nextLesson}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400 text-xs font-sans tracking-wide">اكتمل {course.progressPct}%</span>
+                  </div>
+                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-l from-[var(--teal)] to-[var(--gold)] rounded-full transition-all duration-1000"
+                      style={{ width: `${course.progressPct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
 
-        {/* My Courses — 2 cols */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">My Courses</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/50 h-8 text-xs"
-              asChild
-            >
-              <Link href="/student/courses">
-                Browse all <ArrowRight className="ms-1 h-3.5 w-3.5" />
-              </Link>
-            </Button>
+              <div className="shrink-0 w-full md:w-auto">
+                <button className="w-full md:w-auto bg-[var(--gold)] hover:bg-[var(--gold-light)] text-[var(--dark)] font-bold py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 shadow-[0_4px_20px_rgba(212,160,23,0.3)]">
+                  <PlayCircle className="w-6 h-6" />
+                  <span className="text-lg tracking-wide">ابدأ الدرس</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          {enrollments && enrollments.length > 0 ? (
-            <div className="grid sm:grid-cols-2 gap-4">
-              {enrollments.slice(0, 4).map((enr: any) => {
-                const prog = courseProgressMap[enr.course_id] ?? { total: 0, completed: 0 };
+          {/* 4. MAQAM JOURNEY */}
+          <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] p-6 md:p-8 rounded-2xl">
+            <h2 className="text-xl font-bold text-white mb-8 flex items-center gap-2">
+              <Star className="text-[var(--gold)] w-5 h-5" />
+              رحلة المقامات
+            </h2>
+            
+            <div className="relative flex justify-between items-center px-2 md:px-8">
+              {/* Path Line */}
+              <div className="absolute left-[10%] right-[10%] top-1/2 -translate-y-1/2 h-1 bg-slate-800 rounded-full z-0 overflow-hidden">
+                <div 
+                  className="h-full bg-[var(--gold)] transition-all duration-1000"
+                  style={{ width: `${(Math.max(0, Math.max(...progress.unlockedMaqamat.map(m => MAQAM_NODES.indexOf(m)))) / (MAQAM_NODES.length - 1)) * 100}%` }}
+                />
+              </div>
+              
+              {/* Nodes */}
+              {MAQAM_NODES.map((maqam, index) => {
+                const status = getNodeStatus(maqam, index);
+                
                 return (
-                  <div
-                    key={enr.course_id}
-                    className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex flex-col"
-                  >
-                    <CourseCard course={enr.course} isEnrolled />
-                    {prog.total > 0 && (
-                      <div className="px-4 pb-4 border-t border-slate-800 pt-3">
-                        <ProgressBar
-                          completedLessons={prog.completed}
-                          totalLessons={prog.total}
-                          className="[&_.text-slate-600]:text-slate-400 [&_.text-slate-400]:text-slate-500"
-                        />
-                      </div>
-                    )}
+                  <div key={maqam} className="relative z-10 flex flex-col items-center">
+                    <div 
+                      className={`
+                        w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-full border-4 transition-all duration-500 relative
+                        ${status === 'locked' ? 'bg-slate-900 border-slate-800 text-slate-600' : ''}
+                        ${status === 'unlocked' ? 'bg-[var(--dark)] border-[var(--gold)] text-[var(--gold)] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : ''}
+                        ${status === 'current' ? 'bg-[var(--teal)] border-[var(--teal)] text-[var(--dark)] scale-110 shadow-[0_0_20px_rgba(0,168,150,0.5)]' : ''}
+                      `}
+                    >
+                      {status === 'current' && (
+                        <>
+                          <div className="absolute inset-0 rounded-full border border-[var(--teal)] animate-ping" style={{ animationDuration: '2s' }} />
+                          <div className="absolute inset-[-8px] rounded-full border border-[var(--teal)]/30 animate-ping delay-500" style={{ animationDuration: '2s' }} />
+                        </>
+                      )}
+                      
+                      <span className={`text-sm md:text-xl font-bold ${status === 'locked' ? 'opacity-50' : ''}`}>{index + 1}</span>
+                    </div>
+                    <span className={`mt-3 text-sm md:text-base font-semibold tracking-wide ${status === 'locked' ? 'text-slate-500' : 'text-white'}`}>
+                      {maqam}
+                    </span>
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <div className="rounded-xl border-2 border-dashed border-slate-800 bg-slate-900/40 p-14 text-center">
-              <BookOpen className="h-10 w-10 text-slate-700 mx-auto mb-3" />
-              <p className="text-slate-400 text-sm mb-4">
-                No courses yet. Start learning today!
-              </p>
-              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white" asChild>
-                <Link href="/student/courses">Explore Courses</Link>
-              </Button>
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* Right column */}
-        <div className="space-y-5">
-
-          {/* Recent Activity */}
-          <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-slate-800 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-indigo-400" />
-              <span className="font-semibold text-white text-sm">Recent Activity</span>
+        {/* 5. RECENT ACTIVITY */}
+        <div className="space-y-6">
+          <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] rounded-2xl overflow-hidden h-full flex flex-col">
+            <div className="px-6 py-5 border-b border-[var(--dark-3)] flex items-center justify-between">
+              <h2 className="font-bold text-white text-lg">النشاط الأخير</h2>
+              <Clock className="w-5 h-5 text-[var(--brand-muted)]" />
             </div>
-            <div className="p-4 space-y-3">
-              {completedProgress && completedProgress.length > 0 ? (
-                completedProgress.slice(0, 5).map((cp: any, idx: number) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-emerald-950 border border-emerald-800/50 flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+            
+            <div className="p-6 flex-1 flex flex-col gap-6">
+              {progress.recentActivity.map((activity, idx) => {
+                const isFirst = idx === 0;
+                const actDate = new Date(activity.date);
+                const timeStr = new Intl.DateTimeFormat('ar-EG', { hour: 'numeric', minute: 'numeric', hour12: true }).format(actDate);
+                const dateStr = new Intl.DateTimeFormat('ar-EG', { month: 'short', day: 'numeric' }).format(actDate);
+
+                return (
+                  <div key={idx} className="flex gap-4 relative group">
+                    {/* Timeline Line */}
+                    {idx !== progress.recentActivity.length - 1 && (
+                      <div className="absolute top-8 bottom-[-24px] right-3.5 w-[2px] bg-slate-800" />
+                    )}
+                    
+                    {/* Timeline Dot */}
+                    <div className="relative z-10 shrink-0">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 ${isFirst ? 'bg-[var(--teal)] border-[var(--teal)] text-[var(--dark)]' : 'bg-slate-900 border-slate-700 text-slate-500'}`}>
+                         <div className={`w-2 h-2 rounded-full ${isFirst ? 'bg-[var(--dark)]' : 'bg-slate-500'}`} />
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-slate-300 leading-tight">Completed a lesson</p>
-                      <p className="text-xs text-slate-600 mt-0.5">
-                        {new Date(cp.updated_at).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        })}
+
+                    <div className="pb-1 pt-0.5">
+                      <p className={`text-base font-medium leading-snug ${isFirst ? 'text-white' : 'text-slate-300'}`}>
+                        {activity.action}
                       </p>
+                      <div className="flex items-center gap-2 mt-1.5 text-xs font-sans tracking-wide text-slate-500">
+                        <span>{dateStr}</span>
+                        <span>•</span>
+                        <span>{timeStr}</span>
+                      </div>
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-sm text-slate-600 text-center py-6">No activity yet</p>
-              )}
+                );
+              })}
+            </div>
+            
+            <div className="p-4 border-t border-[var(--dark-3)] bg-[var(--dark-3)]/30">
+              <button className="w-full text-center text-sm text-[var(--teal)] hover:text-white transition-colors py-2 flex items-center justify-center gap-1 font-sans tracking-wide">
+                عرض كل النشاطات
+                <ChevronLeft className="w-4 h-4 rtl:-rotate-180" />
+              </button>
             </div>
           </div>
-
-          {/* Upcoming Deadlines */}
-          <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-slate-800 flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-amber-400" />
-              <span className="font-semibold text-white text-sm">Upcoming Deadlines</span>
-            </div>
-            <div className="p-4 space-y-3">
-              {pendingAssignments.slice(0, 3).length > 0 ? (
-                pendingAssignments.slice(0, 3).map((a: any) => {
-                  const due = a.due_date ? new Date(a.due_date) : null;
-                  const isOverdue = due && due < new Date();
-                  return (
-                    <div key={a.id} className="space-y-0.5">
-                      <p className="text-sm font-medium text-slate-300 line-clamp-1">
-                        {a.title}
-                      </p>
-                      {due ? (
-                        <p
-                          className={`text-xs flex items-center gap-1 ${
-                            isOverdue ? "text-red-400" : "text-amber-400"
-                          }`}
-                        >
-                          <Clock className="h-3 w-3" />
-                          {isOverdue ? "Overdue · " : "Due "}
-                          {due.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-slate-600">No due date</p>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-6">
-                  <CheckCircle2 className="h-8 w-8 text-emerald-800 mx-auto mb-2" />
-                  <p className="text-sm text-slate-600">All caught up!</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {pendingAssignments.length > 0 && (
-            <Button
-              variant="ghost"
-              className="w-full border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 text-xs h-9"
-              asChild
-            >
-              <Link href="/student/dashboard">
-                View all pending{" "}
-                <Badge className="ms-2 bg-amber-600 hover:bg-amber-700 text-white text-xs px-1.5 h-4">
-                  {pendingAssignments.length}
-                </Badge>
-              </Link>
-            </Button>
-          )}
         </div>
+
       </div>
     </div>
+  );
+}
+
+// Icon helper function needed locally
+function Star({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
   );
 }

@@ -5,9 +5,12 @@ import { createClient } from "@/lib/supabase/client";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { cn } from "@/lib/utils";
 
 export default function Analytics() {
   const supabase = createClient();
+  const { t, lang } = useLanguage();
   const [usersByDay, setUsersByDay] = useState<any[]>([]);
   const [topCourses, setTopCourses] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -68,32 +71,34 @@ export default function Analytics() {
     setTransactions(recentEnrollments || []);
   };
 
+  const isRtl = lang === 'ar';
+
   return (
-    <div className="space-y-8">
+    <div className={cn("space-y-8", isRtl ? "text-right font-arabic" : "text-left")}>
       {/* New Users Chart */}
       <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">New Users (Last 30 Days)</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-4">{t.analytics.newUsersTitle}</h3>
         <ResponsiveContainer width="100%" height={250}>
           <LineChart data={usersByDay}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#94a3b8" />
+            <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" reversed={isRtl} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#94a3b8" orientation={isRtl ? "right" : "left"} />
             <Tooltip />
-            <Line type="monotone" dataKey="users" stroke="#7C4DFF" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="users" name={t.analytics.users} stroke="#7C4DFF" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Top Courses Chart */}
       <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Top 5 Courses by Enrollment</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-4">{t.analytics.topCoursesTitle}</h3>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={topCourses}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#94a3b8" />
+            <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#94a3b8" reversed={isRtl} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#94a3b8" orientation={isRtl ? "right" : "left"} />
             <Tooltip />
-            <Bar dataKey="enrollments" fill="#7C4DFF" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="enrollments" name={t.analytics.enrollments} fill="#7C4DFF" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -101,28 +106,32 @@ export default function Analytics() {
       {/* Recent Transactions */}
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         <div className="p-6 border-b bg-slate-50">
-          <h3 className="text-lg font-bold text-slate-900">Recent Transactions</h3>
+          <h3 className="text-lg font-bold text-slate-900">{t.analytics.recentTransactionsTitle}</h3>
         </div>
-        <table className="w-full text-sm">
+        <table className="w-full text-sm" dir={isRtl ? "rtl" : "ltr"}>
           <thead>
             <tr className="border-b bg-slate-50/50">
-              <th className="text-start px-6 py-3 font-semibold text-slate-600">Student</th>
-              <th className="text-start px-6 py-3 font-semibold text-slate-600">Course</th>
-              <th className="text-start px-6 py-3 font-semibold text-slate-600">Amount</th>
-              <th className="text-start px-6 py-3 font-semibold text-slate-600">Date</th>
+              <th className="text-start px-6 py-3 font-semibold text-slate-600 font-arabic">{t.analytics.student}</th>
+              <th className="text-start px-6 py-3 font-semibold text-slate-600 font-arabic">{t.analytics.course}</th>
+              <th className="text-start px-6 py-3 font-semibold text-slate-600 font-arabic">{t.analytics.amount}</th>
+              <th className="text-start px-6 py-3 font-semibold text-slate-600 font-arabic">{t.analytics.date}</th>
             </tr>
           </thead>
           <tbody>
-            {transactions.map((t: any, i: number) => (
+            {transactions.map((t_item: any, i: number) => (
               <tr key={i} className="border-b hover:bg-slate-50">
-                <td className="px-6 py-3 font-medium">{t.student?.full_name || "—"}</td>
-                <td className="px-6 py-3 text-slate-600">{t.course?.title || "—"}</td>
-                <td className="px-6 py-3 text-green-600 font-semibold">${t.course?.price || 0}</td>
-                <td className="px-6 py-3 text-slate-500">{new Date(t.enrolled_at).toLocaleDateString()}</td>
+                <td className="px-6 py-3 font-medium">{t_item.student?.full_name || "—"}</td>
+                <td className="px-6 py-3 text-slate-600">{t_item.course?.title || "—"}</td>
+                <td className="px-6 py-3 text-green-600 font-semibold">
+                  {isRtl ? `${t_item.course?.price || 0}$` : `$${t_item.course?.price || 0}`}
+                </td>
+                <td className="px-6 py-3 text-slate-500">
+                  {new Date(t_item.enrolled_at).toLocaleDateString(isRtl ? 'ar-SA' : 'en-US')}
+                </td>
               </tr>
             ))}
             {transactions.length === 0 && (
-              <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400">No transactions yet.</td></tr>
+              <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400">{t.analytics.noTransactions}</td></tr>
             )}
           </tbody>
         </table>

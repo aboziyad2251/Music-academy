@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Music, LogOut, User, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useI18n } from "@/lib/i18n/context";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface NavbarProps {
   user: {
@@ -21,7 +21,7 @@ interface NavbarProps {
 export default function Navbar({ user }: NavbarProps) {
   const supabase = createClient();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, lang } = useLanguage();
   
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -88,9 +88,14 @@ export default function Navbar({ user }: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-primary text-white shadow-sm">
       <div className="flex h-16 items-center px-6">
-        <div className="flex items-center gap-2 font-bold text-xl">
-          <Music className="h-6 w-6 text-accent" />
-          <span>Music Academy</span>
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-[var(--teal)] flex items-center justify-center flex-shrink-0">
+            <Music className="h-4 w-4 text-white" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-bold text-white text-base leading-tight font-amiri">أكاديمية المقام</span>
+            <span className="text-[9px] text-[var(--gold)] tracking-widest leading-tight">ACADEMY OF THE MAQAM</span>
+          </div>
         </div>
         
         <div className="ms-auto flex items-center space-x-2 md:space-x-4">
@@ -189,7 +194,7 @@ export default function Navbar({ user }: NavbarProps) {
             className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors hover:bg-white/10 text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
           >
             <LogOut className="h-4 w-4 md:me-2" />
-            <span className="hidden md:inline">{t('shell.logout')}</span>
+            <span className="hidden md:inline">{t.nav.signOut}</span>
           </button>
         </div>
       </div>

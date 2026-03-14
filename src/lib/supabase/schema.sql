@@ -111,6 +111,19 @@ CREATE TABLE notifications (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Create ai_interactions table
+CREATE TABLE ai_interactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    endpoint TEXT NOT NULL,
+    language TEXT,
+    context TEXT,
+    prompt TEXT,
+    response TEXT,
+    model_used TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Insert default settings
 INSERT INTO settings (platform_name, enable_ai_chat, enable_registrations) 
 VALUES ('Music Online Academy', true, true);
@@ -127,6 +140,7 @@ ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_interactions ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: Anyone can read, users can update their own
 CREATE POLICY "Public profiles are viewable by everyone."
@@ -276,6 +290,17 @@ CREATE POLICY "Users can update their own notifications (e.g. mark read)."
 CREATE POLICY "Only system or users can insert notifications."
     ON notifications FOR INSERT
     WITH CHECK (true); -- Usually inserted server-side by triggers or service role, but allowing open insert for webhook/db flexibility if RLS applies.
+
+-- AI Interactions Policies
+CREATE POLICY "Admins can view all AI interactions."
+    ON ai_interactions FOR SELECT
+    USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Users can view their own AI interactions."
+    ON ai_interactions FOR SELECT
+    USING (auth.uid() = user_id);
+CREATE POLICY "System can insert AI interactions for users."
+    ON ai_interactions FOR INSERT
+    WITH CHECK (true);
 
 -- Enable Realtime for notifications
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;

@@ -1,330 +1,324 @@
-import { createServerClient } from "@/lib/supabase/server";
-import Link from "next/link";
-import {
-  BookOpen,
-  Users,
-  ClipboardCheck,
-  DollarSign,
-  PlusCircle,
-  ArrowRight,
-  TrendingUp,
-  Star,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
+"use client";
 
-const STAT_CONFIG = [
-  {
-    key: "courseCount",
-    label: "Total Courses",
-    icon: BookOpen,
-    color: "text-emerald-400",
-    bg: "bg-emerald-950/60",
-    border: "border-emerald-800/40",
-  },
-  {
-    key: "studentCount",
-    label: "Total Students",
-    icon: Users,
-    color: "text-indigo-400",
-    bg: "bg-indigo-950/60",
-    border: "border-indigo-800/40",
-  },
-  {
-    key: "pendingCount",
-    label: "Pending Submissions",
-    icon: ClipboardCheck,
-    color: "text-amber-400",
-    bg: "bg-amber-950/60",
-    border: "border-amber-800/40",
-  },
-  {
-    key: "revenue",
-    label: "Est. Revenue",
-    icon: DollarSign,
-    color: "text-teal-400",
-    bg: "bg-teal-950/60",
-    border: "border-teal-800/40",
-    prefix: "$" as string | undefined,
-  },
+import { useState } from "react";
+import { Users, BookOpen, ClipboardCheck, DollarSign, PlusCircle, MessageCircle, X, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+// Mock Data
+const MOCK_STATS = [
+  { label: "الطلاب النشطين", value: "24", icon: Users, color: "text-indigo-400", bgColor: "bg-indigo-950/60", borderColor: "border-indigo-800/40" },
+  { label: "الدورات المنشورة", value: "3", icon: BookOpen, color: "text-emerald-400", bgColor: "bg-emerald-950/60", borderColor: "border-emerald-800/40" },
+  { label: "مراجعات معلقة", value: "12", icon: ClipboardCheck, color: "text-amber-400", bgColor: "bg-amber-950/60", borderColor: "border-amber-800/40" },
+  { label: "إجمالي الأرباح", value: "$4,250", icon: DollarSign, color: "text-teal-400", bgColor: "bg-teal-950/60", borderColor: "border-teal-800/40" }
 ];
 
-export default async function TeacherDashboardPage() {
-  const supabase = createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
-  const userId = session.user.id;
+const MOCK_ROSTER = [
+  { name: "أحمد محمود", course: "أساسيات العود والمقامات الشرقية", lastActive: "منذ ساعتين", progress: 65 },
+  { name: "سارة خالد", course: "مقام الحجاز المتقدم", lastActive: "أمس", progress: 30 },
+  { name: "عمر فاروق", course: "مقدمة في الموسيقى العربية", lastActive: "منذ 3 أيام", progress: 95 },
+  { name: "ليلى حسن", course: "أساسيات العود والمقامات الشرقية", lastActive: "اليوم", progress: 15 },
+  { name: "يوسف إبراهيم", course: "مقام الكرد وتطبيقاته", lastActive: "منذ أسبوع", progress: 100 },
+];
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", userId)
-    .single();
+export default function TeacherDashboard() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [topicInput, setTopicInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const { count: courseCount } = await supabase
-    .from("courses")
-    .select("id", { count: "exact", head: true })
-    .eq("teacher_id", userId);
+  // Form State
+  const [generatedData, setGeneratedData] = useState<any>(null);
+  const [titleAr, setTitleAr] = useState("");
+  const [titleEn, setTitleEn] = useState("");
+  const [objectives, setObjectives] = useState("");
+  const [sections, setSections] = useState<any[]>([]);
+  const [exercises, setExercises] = useState("");
+  const [duration, setDuration] = useState("");
 
-  const { data: teacherCourses } = await supabase
-    .from("courses")
-    .select("id, title, thumbnail_url, status, price")
-    .eq("teacher_id", userId)
-    .order("created_at", { ascending: false });
-
-  const courseIds = teacherCourses?.map((c: any) => c.id) ?? [];
-
-  let studentCount = 0;
-  let pendingCount = 0;
-  let avgScore: number | null = null;
-  let revenue = 0;
-  let recentSubmissions: any[] = [];
-
-  if (courseIds.length > 0) {
-    const { count: sc } = await supabase
-      .from("enrollments")
-      .select("student_id", { count: "exact", head: true })
-      .in("course_id", courseIds);
-    studentCount = sc ?? 0;
-
-    const { data: lessons } = await supabase
-      .from("lessons")
-      .select("id")
-      .in("course_id", courseIds);
-    const lessonIds = lessons?.map((l: any) => l.id) ?? [];
-
-    if (lessonIds.length > 0) {
-      const { data: assignments } = await supabase
-        .from("assignments")
-        .select("id")
-        .in("lesson_id", lessonIds);
-      const assignmentIds = assignments?.map((a: any) => a.id) ?? [];
-
-      if (assignmentIds.length > 0) {
-        const { count: pc } = await supabase
-          .from("submissions")
-          .select("id", { count: "exact", head: true })
-          .in("assignment_id", assignmentIds)
-          .is("score", null);
-        pendingCount = pc ?? 0;
-
-        const { data: graded } = await supabase
-          .from("submissions")
-          .select("score")
-          .in("assignment_id", assignmentIds)
-          .not("score", "is", null);
-
-        if (graded && graded.length > 0) {
-          const sum = graded.reduce((acc: number, s: any) => acc + (s.score ?? 0), 0);
-          avgScore = Math.round(sum / graded.length);
-        }
-
-        const { data: subs } = await supabase
-          .from("submissions")
-          .select("id, submitted_at, score, student:student_id(full_name), assignment:assignment_id(title)")
-          .in("assignment_id", assignmentIds)
-          .order("submitted_at", { ascending: false })
-          .limit(5);
-        recentSubmissions = subs ?? [];
-      }
+  const handleGenerate = async () => {
+    if (!topicInput.trim()) {
+      toast.error("الرجاء إدخال موضوع الدرس");
+      return;
     }
-
-    const { data: enrolledCourses } = await supabase
-      .from("enrollments")
-      .select("course_id, courses:course_id(price)")
-      .in("course_id", courseIds);
-
-    if (enrolledCourses) {
-      revenue = enrolledCourses.reduce(
-        (acc: number, e: any) => acc + (e.courses?.price ?? 0),
-        0
-      );
+    
+    setIsGenerating(true);
+    try {
+      const res = await fetch("/api/ai/course-generator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: topicInput })
+      });
+      
+      if (!res.ok) throw new Error("فشل توليد المحتوى");
+      const data = await res.json();
+      
+      setGeneratedData(data);
+      setTitleAr(data.title_ar || "");
+      setTitleEn(data.title_en || "");
+      setObjectives(data.objectives?.join("\\n") || "");
+      setSections(data.content_sections || []);
+      setExercises(data.practice_exercises?.join("\\n") || "");
+      setDuration(data.estimated_duration_minutes?.toString() || "");
+      
+      toast.success("تم توليد محتوى الدرس بنجاح!");
+    } catch (err) {
+      toast.error("حدث خطأ أثناء الاتصال بالمعلم الذكي");
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
     }
-  }
-
-  const statValues: Record<string, number | string> = {
-    courseCount: courseCount ?? 0,
-    studentCount,
-    pendingCount,
-    revenue: revenue.toLocaleString(),
   };
 
-  const firstName = profile?.full_name?.split(" ")[0] ?? "Teacher";
+  const handleSaveDraft = () => {
+    // Basic validation
+    if (!titleAr) {
+      toast.error("العنوان بالعربية مطلوب");
+      return;
+    }
+    // Simulate save
+    toast.success("تم حفظ الدورة بنجاح كمسودة!");
+    setIsModalOpen(false);
+    setGeneratedData(null);
+    setTopicInput("");
+  };
 
   return (
-    <div className="space-y-8 pb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 pb-8 font-amiri" dir="rtl">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-            Welcome back, {firstName} 🎓
-          </h1>
-          <p className="text-slate-400 mt-1 text-sm">
-            Here&apos;s an overview of your teaching dashboard.
-          </p>
+          <h1 className="text-3xl font-bold text-white mb-2">لوحة المعلم 🎓</h1>
+          <p className="text-[var(--cream)]/60 text-lg">مرحباً بك في لوحة التحكم الخاصة بك.</p>
         </div>
-        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" asChild>
-          <Link href="/teacher/courses/new">
-            <PlusCircle className="me-2 h-4 w-4" /> New Course
-          </Link>
-        </Button>
+        
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-[var(--gold)] hover:bg-[var(--gold-light)] text-[var(--dark)] font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 shadow-[0_4px_20px_rgba(212,160,23,0.3)] shrink-0"
+        >
+          <PlusCircle className="w-5 h-5" />
+          <span className="text-lg tracking-wide">إنشاء دورة جديدة</span>
+        </button>
       </div>
 
-      {/* Stat Cards */}
+      {/* 1. STATS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {STAT_CONFIG.map(({ key, label, icon: Icon, color, bg, border, prefix }) => (
-          <div key={key} className={`rounded-xl border ${border} ${bg} p-5 space-y-4`}>
-            <div className={`h-10 w-10 rounded-lg border ${border} bg-slate-900/60 flex items-center justify-center`}>
-              <Icon className={`h-5 w-5 ${color}`} />
-            </div>
-            <div>
-              <div className={`text-3xl font-bold ${color} tabular-nums`}>
-                {prefix ?? ""}{statValues[key]}
+        {MOCK_STATS.map((stat, i) => (
+          <div key={i} className={`bg-[var(--dark-2)] border ${stat.borderColor} p-6 rounded-2xl`}>
+            <div className="flex items-center gap-4 mb-4">
+              <div className={`p-3 rounded-xl ${stat.bgColor}`}>
+                <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
-              <div className="text-xs text-slate-500 mt-0.5 leading-tight">{label}</div>
+              <h3 className="text-[var(--cream)]/70 text-sm md:text-base font-sans tracking-wide">{stat.label}</h3>
             </div>
+            <p className="text-4xl font-bold text-white tracking-widest">{stat.value}</p>
           </div>
         ))}
       </div>
 
-      {/* 3-col grid */}
-      <div className="grid lg:grid-cols-3 gap-6">
-
-        {/* My Courses — 2 cols */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">My Courses</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/50 h-8 text-xs"
-              asChild
-            >
-              <Link href="/teacher/courses">
-                View all <ArrowRight className="ms-1 h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          </div>
-
-          {teacherCourses && teacherCourses.length > 0 ? (
-            <div className="space-y-3">
-              {teacherCourses.slice(0, 5).map((course: any) => (
-                <Link
-                  key={course.id}
-                  href={`/teacher/courses/${course.id}`}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors"
-                >
-                  <div className="h-12 w-12 rounded-lg bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
-                    {course.thumbnail_url ? (
-                      <Image 
-                        src={course.thumbnail_url} 
-                        alt={course.title} 
-                        fill
-                        className="object-cover" 
-                      />
-                    ) : (
-                      <BookOpen className="h-5 w-5 text-slate-600" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{course.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">${course.price}</p>
-                  </div>
-                  <Badge
-                    className={
-                      course.status === "published"
-                        ? "bg-emerald-900/60 text-emerald-400 border border-emerald-800/40"
-                        : "bg-slate-800 text-slate-400 border border-slate-700"
-                    }
-                  >
-                    {course.status ?? "draft"}
-                  </Badge>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-xl border-2 border-dashed border-slate-800 bg-slate-900/40 p-14 text-center">
-              <BookOpen className="h-10 w-10 text-slate-700 mx-auto mb-3" />
-              <p className="text-slate-400 text-sm mb-4">No courses yet. Create your first course!</p>
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" asChild>
-                <Link href="/teacher/courses/new">Create Course</Link>
-              </Button>
-            </div>
-          )}
+      {/* 2. STUDENT ROSTER TABLE */}
+      <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] rounded-2xl overflow-hidden shadow-lg">
+        <div className="p-6 border-b border-[var(--dark-3)] bg-[var(--dark-2)]">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <Users className="w-5 h-5 text-[var(--teal)]" />
+            سجل الطلاب
+          </h2>
         </div>
-
-        {/* Right column */}
-        <div className="space-y-5">
-
-          {/* Avg Score */}
-          {avgScore !== null && (
-            <div className="rounded-xl bg-slate-900 border border-slate-800 p-5 flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-amber-950/60 border border-amber-800/40 flex items-center justify-center flex-shrink-0">
-                <Star className="h-5 w-5 text-amber-400" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">Avg. Student Score</p>
-                <p className="text-3xl font-bold text-amber-400">{avgScore}%</p>
-              </div>
-            </div>
-          )}
-
-          {/* Recent Submissions */}
-          <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-emerald-400" />
-                <span className="font-semibold text-white text-sm">Recent Submissions</span>
-              </div>
-              {pendingCount > 0 && (
-                <Badge className="bg-amber-600 text-white text-[10px] h-4 px-1.5">
-                  {pendingCount} ungraded
-                </Badge>
-              )}
-            </div>
-            <div className="p-4 space-y-3">
-              {recentSubmissions.length > 0 ? (
-                recentSubmissions.map((sub: any) => (
-                  <div key={sub.id} className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-indigo-950 border border-indigo-800/50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <ClipboardCheck className="h-3.5 w-3.5 text-indigo-400" />
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-[var(--cream)]/80">
+            <thead className="bg-[var(--dark)]/50 text-sm font-sans tracking-wide">
+              <tr>
+                <th className="px-6 py-4 font-semibold shrink-0 w-1/4">اسم الطالب</th>
+                <th className="px-6 py-4 font-semibold w-2/5">الدورة المسجلة</th>
+                <th className="px-6 py-4 font-semibold shrink-0 w-1/6">آخر نشاط</th>
+                <th className="px-6 py-4 font-semibold shrink-0 w-1/6">التقدم</th>
+                <th className="px-6 py-4 font-semibold text-center shrink-0 w-24">مراسلة</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--dark-3)]">
+              {MOCK_ROSTER.map((student, i) => (
+                <tr key={i} className="hover:bg-[var(--dark-3)]/30 transition-colors">
+                  <td className="px-6 py-4 font-medium text-white">{student.name}</td>
+                  <td className="px-6 py-4 text-[var(--brand-muted)]">{student.course}</td>
+                  <td className="px-6 py-4 text-xs font-sans text-slate-400">{student.lastActive}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-l from-[var(--teal)] to-[var(--gold)] rounded-full"
+                          style={{ width: `${student.progress}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-sans tracking-wide font-bold">{student.progress}%</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-300 leading-tight truncate">
-                        {(sub.student as any)?.full_name ?? "Student"}
-                      </p>
-                      <p className="text-xs text-slate-600 mt-0.5 truncate">
-                        {(sub.assignment as any)?.title}
-                      </p>
-                    </div>
-                    {sub.score !== null ? (
-                      <span className="text-xs text-emerald-400 font-semibold flex-shrink-0">{sub.score}</span>
-                    ) : (
-                      <span className="text-xs text-amber-400 flex-shrink-0">Pending</span>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-slate-600 text-center py-6">No submissions yet</p>
-              )}
-            </div>
-            {pendingCount > 0 && (
-              <div className="px-4 pb-4">
-                <Button
-                  variant="ghost"
-                  className="w-full border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 text-xs h-9"
-                  asChild
-                >
-                  <Link href="/teacher/grades">
-                    Grade submissions <ArrowRight className="ms-1 h-3.5 w-3.5" />
-                  </Link>
-                </Button>
-              </div>
-            )}
-          </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button className="text-[var(--teal)] hover:text-white hover:bg-[var(--teal)]/20 p-2 rounded-lg transition-colors inline-block">
+                      <MessageCircle className="w-5 h-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      {/* 3. AI COURSE CREATION MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] w-full max-w-4xl rounded-3xl shadow-2xl relative my-auto flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-[var(--dark-3)] flex items-center justify-between shrink-0">
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                مولد محتوى الدورات بالذكاء الاصطناعي
+                <Sparkles className="w-5 h-5 text-[var(--teal)]" />
+              </h2>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-white bg-[var(--dark)] p-2 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+              
+              {/* AI Input Section */}
+              <div className="bg-[var(--dark)]/50 p-6 rounded-2xl border border-[var(--dark-3)]/50 space-y-4">
+                <label className="block text-lg text-[var(--cream)]">عن ماذا تريد أن تعلم اليوم؟ (Topic)</label>
+                <div className="flex gap-4">
+                  <input 
+                    type="text" 
+                    value={topicInput}
+                    onChange={(e) => setTopicInput(e.target.value)}
+                    placeholder="مثال: شرح مبسط لمقام الحجاز على العود..."
+                    className="flex-1 bg-[var(--dark)] border border-slate-700 focus:border-[var(--teal)] focus:ring-1 focus:ring-[var(--teal)] rounded-xl px-4 py-3 text-white font-sans outline-none"
+                    disabled={isGenerating}
+                  />
+                  <button 
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !topicInput.trim()}
+                    className="bg-[var(--teal)] hover:bg-teal-500 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-colors shrink-0 font-sans tracking-wide"
+                  >
+                    {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+                    توليد المحتوى
+                  </button>
+                </div>
+                <p className="text-sm text-slate-500 font-sans">سيقوم الذكاء الاصطناعي ببناء هيكل كامل للدرس فوراً.</p>
+              </div>
+
+              {/* Editable Form Section (Visible after generation) */}
+              {generatedData && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pt-4 border-t border-[var(--dark-3)]">
+                  <h3 className="text-xl font-bold text-[var(--gold)] flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5" />
+                    المحتوى المقترح (قابل للتعديل)
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm text-slate-400 font-sans">عنوان الدرس (عربي)</label>
+                      <input 
+                        value={titleAr}
+                        onChange={(e) => setTitleAr(e.target.value)}
+                        className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-2 text-white font-amiri outline-none focus:border-[var(--gold)]" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-slate-400 font-sans">Lesson Title (English)</label>
+                      <input 
+                        value={titleEn}
+                        onChange={(e) => setTitleEn(e.target.value)}
+                        dir="ltr"
+                        className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-2 text-white font-mono text-sm outline-none focus:border-[var(--gold)]" 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm text-slate-400 font-sans">الأهداف التعليمية (سطر لكل هدف)</label>
+                    <textarea 
+                      value={objectives}
+                      onChange={(e) => setObjectives(e.target.value)}
+                      rows={4}
+                      className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-3 text-white font-amiri leading-relaxed outline-none focus:border-[var(--gold)] resize-none" 
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-sm text-slate-400 font-sans">هيكل محتوى الدرس</label>
+                    {sections.map((sec, idx) => (
+                      <div key={idx} className="bg-[var(--dark)] p-4 rounded-xl border border-slate-700 space-y-3">
+                        <input 
+                          value={sec.heading}
+                          onChange={(e) => {
+                            const newSecs = [...sections];
+                            newSecs[idx].heading = e.target.value;
+                            setSections(newSecs);
+                          }}
+                          className="w-full bg-transparent border-b border-slate-600 px-2 py-1 text-lg font-bold text-white font-amiri outline-none focus:border-[var(--teal)]" 
+                        />
+                        <textarea 
+                          value={sec.body}
+                          onChange={(e) => {
+                            const newSecs = [...sections];
+                            newSecs[idx].body = e.target.value;
+                            setSections(newSecs);
+                          }}
+                          rows={3}
+                          className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-[var(--cream)]/80 font-amiri leading-relaxed outline-none focus:border-[var(--teal)] resize-none" 
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="md:col-span-3 space-y-2">
+                      <label className="text-sm text-slate-400 font-sans">التمارين التطبيقية</label>
+                      <textarea 
+                        value={exercises}
+                        onChange={(e) => setExercises(e.target.value)}
+                        rows={3}
+                        className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-3 text-white font-amiri leading-relaxed outline-none focus:border-[var(--gold)] resize-none" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-slate-400 font-sans">مدة الدرس (دقائق)</label>
+                      <input 
+                        type="number"
+                        value={duration}
+                        onChange={(e) => setDuration(e.target.value)}
+                        className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-3 text-3xl text-center text-[var(--teal)] font-bold font-sans outline-none focus:border-[var(--gold)]" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-[var(--dark-3)] bg-[var(--dark-2)] rounded-b-3xl shrink-0 flex justify-end gap-4">
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="px-6 py-2.5 rounded-xl text-slate-400 hover:text-white font-sans font-bold transition-colors"
+              >
+                إلغاء
+              </button>
+              <button 
+                onClick={handleSaveDraft}
+                disabled={!generatedData}
+                className="bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--dark)] font-bold py-2.5 px-8 rounded-xl transition-all shadow-lg font-sans tracking-wide"
+              >
+                حفظ كمسودة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

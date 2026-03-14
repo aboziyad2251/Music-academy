@@ -1,15 +1,17 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
-import { Inter, Cairo } from "next/font/google";
+import { Inter, Amiri, IBM_Plex_Mono } from "next/font/google";
 import { cookies } from "next/headers";
-import { I18nProvider } from "@/lib/i18n/context";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { FloatingChat } from "@/components/chat/FloatingChat";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const cairo = Cairo({ subsets: ["arabic"], variable: "--font-cairo" });
+const amiri = Amiri({ subsets: ["arabic"], weight: ["400", "700"], variable: "--font-amiri" });
+const ibmMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "600"], variable: "--font-ibm-mono" });
 
 export const metadata: Metadata = {
-  title: "Music Online Academy",
+  title: "أكاديمية المقام - ACADEMY OF THE MAQAM",
   description: "Professional online music education platform",
 };
 
@@ -19,16 +21,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const cookieStore = cookies();
-  const locale = (cookieStore.get("NEXT_LOCALE")?.value as "en" | "ar") || "en";
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "ar";
   const dir = locale === "ar" ? "rtl" : "ltr";
-  const fontClass = locale === "ar" ? cairo.className : inter.className;
 
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
-      <body className={`min-h-screen bg-background antialiased ${fontClass}`}>
-        <I18nProvider initialLocale={locale}>
+      <body className={`min-h-screen bg-background antialiased ${amiri.className} ${ibmMono.variable}`}>
+        <LanguageProvider>
           {children}
-        </I18nProvider>
+        </LanguageProvider>
+        <FloatingChat />
         <Toaster />
       </body>
     </html>
