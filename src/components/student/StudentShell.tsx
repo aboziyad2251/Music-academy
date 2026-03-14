@@ -32,9 +32,9 @@ interface StudentShellProps {
 
 const NAV_LINKS = [
   { href: "/student/dashboard", label: "shell.dashboard", icon: LayoutDashboard },
-  { href: "/student/courses",   label: "shell.courses", icon: Library },
+  { href: "/student/courses", label: "shell.courses", icon: Library },
   { href: "/student/dashboard", label: "shell.courses", icon: BookOpen },
-  { href: "/student/progress",  label: "shell.progress", icon: TrendingUp }, 
+  { href: "/student/progress", label: "shell.progress", icon: TrendingUp },
   { href: "/student/assignments", label: "shell.assignments", icon: ClipboardList },
 ];
 

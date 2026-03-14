@@ -20,6 +20,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/lib/i18n/context";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface TeacherShellProps {
   user: {
@@ -36,6 +38,7 @@ export default function TeacherShell({ user, ungradedCount, children }: TeacherS
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useI18n();
 
   const initials =
     user.full_name
@@ -46,12 +49,12 @@ export default function TeacherShell({ user, ungradedCount, children }: TeacherS
       .slice(0, 2) || "TC";
 
   const NAV_LINKS = [
-    { href: "/teacher/dashboard",   label: "Dashboard",      icon: LayoutDashboard, badge: null },
-    { href: "/teacher/courses",     label: "My Courses",     icon: BookOpen,        badge: null },
-    { href: "/teacher/courses/new", label: "Create Course",  icon: PlusCircle,      badge: null },
-    { href: "/teacher/students",    label: "My Students",    icon: Users,           badge: null },
-    { href: "/teacher/grades",      label: "Grades",         icon: ClipboardCheck,  badge: ungradedCount > 0 ? ungradedCount : null },
-    { href: "/teacher/analytics",   label: "Analytics",      icon: BarChart3,       badge: null },
+    { href: "/teacher/dashboard",   label: "shell.dashboard",      icon: LayoutDashboard, badge: null },
+    { href: "/teacher/courses",     label: "shell.courses",     icon: BookOpen,        badge: null },
+    { href: "/teacher/courses/new", label: "shell.createCourse",  icon: PlusCircle,      badge: null },
+    { href: "/teacher/students",    label: "shell.myStudents",    icon: Users,           badge: null },
+    { href: "/teacher/grades",      label: "shell.grades",         icon: ClipboardCheck,  badge: ungradedCount > 0 ? ungradedCount : null },
+    { href: "/teacher/analytics",   label: "shell.analytics",      icon: BarChart3,       badge: null },
   ];
 
   const handleSignOut = async () => {
@@ -72,7 +75,7 @@ export default function TeacherShell({ user, ungradedCount, children }: TeacherS
       {/* Nav */}
       <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
         <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-600">
-          Teacher Portal
+          {t("shell.teacherPortal")}
         </p>
         {NAV_LINKS.map(({ href, label, icon: Icon, badge }) => {
           const isActive =
@@ -99,7 +102,7 @@ export default function TeacherShell({ user, ungradedCount, children }: TeacherS
                     isActive ? "text-emerald-200" : "text-slate-500 group-hover:text-slate-300"
                   )}
                 />
-                {label}
+                {t(label)}
               </div>
               {badge !== null && (
                 <span className="h-5 min-w-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
@@ -130,7 +133,7 @@ export default function TeacherShell({ user, ungradedCount, children }: TeacherS
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-950/40 transition-all"
         >
           <LogOut className="h-4 w-4" />
-          Sign Out
+          {t("shell.logout")}
         </button>
       </div>
     </div>
@@ -175,12 +178,13 @@ export default function TeacherShell({ user, ungradedCount, children }: TeacherS
               <Menu className="h-5 w-5" />
             </button>
             <span className="hidden lg:block text-sm text-slate-400">
-              Welcome,{" "}
+              {t("shell.welcomeBack")}{" "}
               <span className="font-semibold text-white">{user.full_name.split(" ")[0]}</span>
             </span>
           </div>
 
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             {/* Bell with ungraded badge */}
             <button className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
               <Bell className="h-5 w-5" />
