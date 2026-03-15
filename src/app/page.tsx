@@ -25,9 +25,3 @@ export default async function HomePage() {
     redirect("/student/dashboard");
   }
 }
-
-import { getServerI18n } from "@/lib/i18n/server";
-// inside your page...
-const { t } = await getServerI18n();
-<h1>{t("welcomeMessage")}</h1>
-

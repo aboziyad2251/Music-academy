@@ -61,11 +61,13 @@ export default function TeacherCoursesPage() {
 
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
-      published: "bg-green-100 text-green-700",
-      draft: "bg-amber-100 text-amber-700",
-      archived: "bg-slate-100 text-slate-500",
+      published:      "bg-emerald-900/60 text-emerald-400 border border-emerald-800/40",
+      draft:          "bg-slate-700/60 text-slate-300 border border-slate-600/40",
+      archived:       "bg-red-900/60 text-red-400 border border-red-800/40",
+      pending_review: "bg-amber-900/60 text-amber-400 border border-amber-800/40",
     };
-    return <Badge className={map[status] || ""}>{status}</Badge>;
+    const labels: Record<string, string> = { pending_review: "In Review" };
+    return <Badge className={map[status] || "bg-slate-800 text-slate-400"}>{labels[status] ?? status}</Badge>;
   };
 
   return (

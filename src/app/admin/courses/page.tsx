@@ -12,19 +12,19 @@ interface Course {
   id: string;
   title: string;
   teacher_name: string;
-  status: "draft" | "published" | "archived";
+  status: "draft" | "pending_review" | "published" | "archived";
   enrolled: number;
   revenue: number;
 }
 
-const TABS = ["All", "Draft", "Published", "Archived"] as const;
+const TABS = ["All", "Pending Review", "Draft", "Published", "Archived"] as const;
 
 export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<string>("All");
-  const [confirmAction, setConfirmAction] = useState<{ type: "approve" | "reject" | "archive" | "delete"; courseId: string } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: "approve" | "reject" | "archive" | "delete"; courseId: string; courseName?: string } | null>(null);
   const [actioning, setActioning] = useState(false);
 
   const fetchCourses = useCallback(async () => {
@@ -37,9 +37,13 @@ export default function AdminCoursesPage() {
 
   useEffect(() => { fetchCourses(); }, [fetchCourses]);
 
+  const pendingCount = courses.filter((c) => c.status === "pending_review").length;
+
   const filtered = courses.filter((c) => {
     const matchSearch = c.title.toLowerCase().includes(search.toLowerCase()) || c.teacher_name.toLowerCase().includes(search.toLowerCase());
-    const matchTab = activeTab === "All" || c.status.toLowerCase() === activeTab.toLowerCase();
+    const matchTab = activeTab === "All"
+      || (activeTab === "Pending Review" && c.status === "pending_review")
+      || c.status.toLowerCase() === activeTab.toLowerCase();
     return matchSearch && matchTab;
   });
 
@@ -71,11 +75,15 @@ export default function AdminCoursesPage() {
 
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
-      published: "bg-emerald-900/60 text-emerald-400 border border-emerald-800/40",
-      draft:     "bg-slate-700/60 text-slate-300 border border-slate-600/40",
-      archived:  "bg-red-900/60 text-red-400 border border-red-800/40",
+      published:      "bg-emerald-900/60 text-emerald-400 border border-emerald-800/40",
+      draft:          "bg-slate-700/60 text-slate-300 border border-slate-600/40",
+      archived:       "bg-red-900/60 text-red-400 border border-red-800/40",
+      pending_review: "bg-amber-900/60 text-amber-400 border border-amber-800/40",
     };
-    return <Badge className={map[status] || "bg-slate-800 text-slate-400"}>{status}</Badge>;
+    const labels: Record<string, string> = {
+      pending_review: "Pending Review",
+    };
+    return <Badge className={map[status] || "bg-slate-800 text-slate-400"}>{labels[status] ?? status}</Badge>;
   };
 
   return (
@@ -112,11 +120,14 @@ export default function AdminCoursesPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {TABS.map((t) => (
             <button key={t} onClick={() => setActiveTab(t)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activeTab === t ? "bg-amber-600 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white"}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${activeTab === t ? "bg-amber-600 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white"}`}>
               {t}
+              {t === "Pending Review" && pendingCount > 0 && (
+                <span className="bg-amber-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
+              )}
             </button>
           ))}
         </div>
@@ -169,17 +180,39 @@ export default function AdminCoursesPage() {
                   <td className="px-5 py-3.5 text-emerald-400 font-medium tabular-nums hidden lg:table-cell">${c.revenue}</td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-1.5 justify-end">
-                      <Link href={`/teacher/courses/${c.id}`} className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-900/40" title="Edit / Manage">
-                        <Edit className="h-4 w-4" />
-                      </Link>
-                      {c.status !== "published" && (
-                        <button onClick={() => setConfirmAction({ type: "approve", courseId: c.id })} className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-900/40" title="Approve"><CheckCircle className="h-4 w-4" /></button>
+                      {c.status === "pending_review" && (
+                        <>
+                          <button
+                            onClick={() => setConfirmAction({ type: "approve", courseId: c.id, courseName: c.title })}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-800/60 text-emerald-300 hover:bg-emerald-800 text-xs font-semibold"
+                            title="Approve & Publish"
+                          >
+                            <CheckCircle className="h-3.5 w-3.5" /> Approve
+                          </button>
+                          <button
+                            onClick={() => setConfirmAction({ type: "reject", courseId: c.id, courseName: c.title })}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-900/40 text-red-300 hover:bg-red-900/70 text-xs font-semibold"
+                            title="Reject (move to Draft)"
+                          >
+                            <XCircle className="h-3.5 w-3.5" /> Reject
+                          </button>
+                        </>
                       )}
-                      {c.status === "published" && (
-                        <button onClick={() => setConfirmAction({ type: "reject", courseId: c.id })} className="p-1.5 rounded-lg text-amber-400 hover:bg-amber-900/40" title="Move to Draft"><XCircle className="h-4 w-4" /></button>
-                      )}
-                      {c.status !== "archived" && (
-                        <button onClick={() => setConfirmAction({ type: "archive", courseId: c.id })} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-700" title="Archive"><Archive className="h-4 w-4" /></button>
+                      {c.status !== "pending_review" && (
+                        <>
+                          <Link href={`/teacher/courses/${c.id}`} className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-900/40" title="Edit / Manage">
+                            <Edit className="h-4 w-4" />
+                          </Link>
+                          {c.status !== "published" && (
+                            <button onClick={() => setConfirmAction({ type: "approve", courseId: c.id })} className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-900/40" title="Approve"><CheckCircle className="h-4 w-4" /></button>
+                          )}
+                          {c.status === "published" && (
+                            <button onClick={() => setConfirmAction({ type: "reject", courseId: c.id })} className="p-1.5 rounded-lg text-amber-400 hover:bg-amber-900/40" title="Move to Draft"><XCircle className="h-4 w-4" /></button>
+                          )}
+                          {c.status !== "archived" && (
+                            <button onClick={() => setConfirmAction({ type: "archive", courseId: c.id })} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-700" title="Archive"><Archive className="h-4 w-4" /></button>
+                          )}
+                        </>
                       )}
                       <button onClick={() => setConfirmAction({ type: "delete", courseId: c.id })} className="p-1.5 rounded-lg text-red-400 hover:bg-red-900/40" title="Delete"><Trash2 className="h-4 w-4" /></button>
                     </div>

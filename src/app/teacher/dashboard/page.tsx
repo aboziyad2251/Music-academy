@@ -1,324 +1,124 @@
-"use client";
+import { createServerClient } from "@/lib/supabase/server";
+import TeacherDashboardClient from "./TeacherDashboardClient";
 
-import { useState } from "react";
-import { Users, BookOpen, ClipboardCheck, DollarSign, PlusCircle, MessageCircle, X, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+export default async function TeacherDashboardPage() {
+  const supabase = createServerClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
 
-// Mock Data
-const MOCK_STATS = [
-  { label: "الطلاب النشطين", value: "24", icon: Users, color: "text-indigo-400", bgColor: "bg-indigo-950/60", borderColor: "border-indigo-800/40" },
-  { label: "الدورات المنشورة", value: "3", icon: BookOpen, color: "text-emerald-400", bgColor: "bg-emerald-950/60", borderColor: "border-emerald-800/40" },
-  { label: "مراجعات معلقة", value: "12", icon: ClipboardCheck, color: "text-amber-400", bgColor: "bg-amber-950/60", borderColor: "border-amber-800/40" },
-  { label: "إجمالي الأرباح", value: "$4,250", icon: DollarSign, color: "text-teal-400", bgColor: "bg-teal-950/60", borderColor: "border-teal-800/40" }
-];
+  const teacherId = session.user.id;
 
-const MOCK_ROSTER = [
-  { name: "أحمد محمود", course: "أساسيات العود والمقامات الشرقية", lastActive: "منذ ساعتين", progress: 65 },
-  { name: "سارة خالد", course: "مقام الحجاز المتقدم", lastActive: "أمس", progress: 30 },
-  { name: "عمر فاروق", course: "مقدمة في الموسيقى العربية", lastActive: "منذ 3 أيام", progress: 95 },
-  { name: "ليلى حسن", course: "أساسيات العود والمقامات الشرقية", lastActive: "اليوم", progress: 15 },
-  { name: "يوسف إبراهيم", course: "مقام الكرد وتطبيقاته", lastActive: "منذ أسبوع", progress: 100 },
-];
+  // Fetch teacher's courses
+  const { data: courses } = await supabase
+    .from("courses")
+    .select("id, title, status, price")
+    .eq("teacher_id", teacherId);
 
-export default function TeacherDashboard() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [topicInput, setTopicInput] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const courseIds = (courses ?? []).map((c: any) => c.id);
+  const publishedCourses = (courses ?? []).filter((c: any) => c.status === "published").length;
 
-  // Form State
-  const [generatedData, setGeneratedData] = useState<any>(null);
-  const [titleAr, setTitleAr] = useState("");
-  const [titleEn, setTitleEn] = useState("");
-  const [objectives, setObjectives] = useState("");
-  const [sections, setSections] = useState<any[]>([]);
-  const [exercises, setExercises] = useState("");
-  const [duration, setDuration] = useState("");
+  // Active students (unique enrolled students across teacher's courses)
+  const { data: enrollments } = courseIds.length
+    ? await supabase
+        .from("enrollments")
+        .select("student_id, course_id, enrolled_at, student:student_id(full_name)")
+        .in("course_id", courseIds)
+    : { data: [] };
 
-  const handleGenerate = async () => {
-    if (!topicInput.trim()) {
-      toast.error("الرجاء إدخال موضوع الدرس");
-      return;
-    }
-    
-    setIsGenerating(true);
-    try {
-      const res = await fetch("/api/ai/course-generator", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: topicInput })
-      });
-      
-      if (!res.ok) throw new Error("فشل توليد المحتوى");
-      const data = await res.json();
-      
-      setGeneratedData(data);
-      setTitleAr(data.title_ar || "");
-      setTitleEn(data.title_en || "");
-      setObjectives(data.objectives?.join("\\n") || "");
-      setSections(data.content_sections || []);
-      setExercises(data.practice_exercises?.join("\\n") || "");
-      setDuration(data.estimated_duration_minutes?.toString() || "");
-      
-      toast.success("تم توليد محتوى الدرس بنجاح!");
-    } catch (err) {
-      toast.error("حدث خطأ أثناء الاتصال بالمعلم الذكي");
-      console.error(err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  const activeStudents = new Set((enrollments ?? []).map((e: any) => e.student_id)).size;
 
-  const handleSaveDraft = () => {
-    // Basic validation
-    if (!titleAr) {
-      toast.error("العنوان بالعربية مطلوب");
-      return;
-    }
-    // Simulate save
-    toast.success("تم حفظ الدورة بنجاح كمسودة!");
-    setIsModalOpen(false);
-    setGeneratedData(null);
-    setTopicInput("");
-  };
+  // Total earnings (sum of course prices × enrollments)
+  const totalEarnings = (enrollments ?? []).reduce((acc: number, e: any) => {
+    const course = (courses ?? []).find((c: any) => c.id === e.course_id);
+    return acc + (course?.price ?? 0);
+  }, 0);
+
+  // Pending reviews: ungraded submissions for teacher's courses
+  let pendingReviews = 0;
+  if (courseIds.length) {
+    const { count } = await supabase
+      .from("submissions")
+      .select("id", { count: "exact", head: true })
+      .is("score", null)
+      .in(
+        "assignment_id",
+        (await supabase
+          .from("assignments")
+          .select("id")
+          .in(
+            "lesson_id",
+            (await supabase.from("lessons").select("id").in("course_id", courseIds)).data?.map((l: any) => l.id) ?? []
+          )).data?.map((a: any) => a.id) ?? []
+      );
+    pendingReviews = count ?? 0;
+  }
+
+  // Build roster: latest 10 enrolled students with progress
+  const rosterEnrollments = (enrollments ?? []).slice(0, 10);
+  const roster = await Promise.all(
+    rosterEnrollments.map(async (e: any) => {
+      const course = (courses ?? []).find((c: any) => c.id === e.course_id);
+
+      // Total lessons in course
+      const { count: totalLessons } = await supabase
+        .from("lessons")
+        .select("id", { count: "exact", head: true })
+        .eq("course_id", e.course_id);
+
+      // Completed lessons for this student in this course
+      const lessonIds = totalLessons
+        ? (await supabase.from("lessons").select("id").eq("course_id", e.course_id)).data?.map((l: any) => l.id) ?? []
+        : [];
+
+      const { count: completedLessons } = lessonIds.length
+        ? await supabase
+            .from("lesson_progress")
+            .select("id", { count: "exact", head: true })
+            .eq("student_id", e.student_id)
+            .eq("completed", true)
+            .in("lesson_id", lessonIds)
+        : { count: 0 };
+
+      const progress = totalLessons ? Math.round(((completedLessons ?? 0) / totalLessons) * 100) : 0;
+
+      // Last active: most recent lesson_progress update
+      const { data: lastActivity } = await supabase
+        .from("lesson_progress")
+        .select("updated_at")
+        .eq("student_id", e.student_id)
+        .in("lesson_id", lessonIds.length ? lessonIds : ["none"])
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      let lastActive = "لم يبدأ بعد";
+      if (lastActivity && lastActivity.length > 0) {
+        const diff = Date.now() - new Date(lastActivity[0].updated_at).getTime();
+        const hours = Math.floor(diff / 3600000);
+        if (hours < 1) lastActive = "منذ قليل";
+        else if (hours < 24) lastActive = `منذ ${hours} ساعة`;
+        else {
+          const days = Math.floor(hours / 24);
+          lastActive = days === 1 ? "أمس" : `منذ ${days} أيام`;
+        }
+      }
+
+      const student: any = e.student;
+      return {
+        name: student?.full_name ?? "طالب",
+        course: course?.title ?? "دورة",
+        lastActive,
+        progress,
+      };
+    })
+  );
 
   return (
-    <div className="space-y-8 pb-8 font-amiri" dir="rtl">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">لوحة المعلم 🎓</h1>
-          <p className="text-[var(--cream)]/60 text-lg">مرحباً بك في لوحة التحكم الخاصة بك.</p>
-        </div>
-        
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-[var(--gold)] hover:bg-[var(--gold-light)] text-[var(--dark)] font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 shadow-[0_4px_20px_rgba(212,160,23,0.3)] shrink-0"
-        >
-          <PlusCircle className="w-5 h-5" />
-          <span className="text-lg tracking-wide">إنشاء دورة جديدة</span>
-        </button>
-      </div>
-
-      {/* 1. STATS ROW */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {MOCK_STATS.map((stat, i) => (
-          <div key={i} className={`bg-[var(--dark-2)] border ${stat.borderColor} p-6 rounded-2xl`}>
-            <div className="flex items-center gap-4 mb-4">
-              <div className={`p-3 rounded-xl ${stat.bgColor}`}>
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
-              </div>
-              <h3 className="text-[var(--cream)]/70 text-sm md:text-base font-sans tracking-wide">{stat.label}</h3>
-            </div>
-            <p className="text-4xl font-bold text-white tracking-widest">{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* 2. STUDENT ROSTER TABLE */}
-      <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] rounded-2xl overflow-hidden shadow-lg">
-        <div className="p-6 border-b border-[var(--dark-3)] bg-[var(--dark-2)]">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-[var(--teal)]" />
-            سجل الطلاب
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-right text-[var(--cream)]/80">
-            <thead className="bg-[var(--dark)]/50 text-sm font-sans tracking-wide">
-              <tr>
-                <th className="px-6 py-4 font-semibold shrink-0 w-1/4">اسم الطالب</th>
-                <th className="px-6 py-4 font-semibold w-2/5">الدورة المسجلة</th>
-                <th className="px-6 py-4 font-semibold shrink-0 w-1/6">آخر نشاط</th>
-                <th className="px-6 py-4 font-semibold shrink-0 w-1/6">التقدم</th>
-                <th className="px-6 py-4 font-semibold text-center shrink-0 w-24">مراسلة</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--dark-3)]">
-              {MOCK_ROSTER.map((student, i) => (
-                <tr key={i} className="hover:bg-[var(--dark-3)]/30 transition-colors">
-                  <td className="px-6 py-4 font-medium text-white">{student.name}</td>
-                  <td className="px-6 py-4 text-[var(--brand-muted)]">{student.course}</td>
-                  <td className="px-6 py-4 text-xs font-sans text-slate-400">{student.lastActive}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-l from-[var(--teal)] to-[var(--gold)] rounded-full"
-                          style={{ width: `${student.progress}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-sans tracking-wide font-bold">{student.progress}%</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <button className="text-[var(--teal)] hover:text-white hover:bg-[var(--teal)]/20 p-2 rounded-lg transition-colors inline-block">
-                      <MessageCircle className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* 3. AI COURSE CREATION MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] w-full max-w-4xl rounded-3xl shadow-2xl relative my-auto flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-[var(--dark-3)] flex items-center justify-between shrink-0">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                مولد محتوى الدورات بالذكاء الاصطناعي
-                <Sparkles className="w-5 h-5 text-[var(--teal)]" />
-              </h2>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white bg-[var(--dark)] p-2 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
-              
-              {/* AI Input Section */}
-              <div className="bg-[var(--dark)]/50 p-6 rounded-2xl border border-[var(--dark-3)]/50 space-y-4">
-                <label className="block text-lg text-[var(--cream)]">عن ماذا تريد أن تعلم اليوم؟ (Topic)</label>
-                <div className="flex gap-4">
-                  <input 
-                    type="text" 
-                    value={topicInput}
-                    onChange={(e) => setTopicInput(e.target.value)}
-                    placeholder="مثال: شرح مبسط لمقام الحجاز على العود..."
-                    className="flex-1 bg-[var(--dark)] border border-slate-700 focus:border-[var(--teal)] focus:ring-1 focus:ring-[var(--teal)] rounded-xl px-4 py-3 text-white font-sans outline-none"
-                    disabled={isGenerating}
-                  />
-                  <button 
-                    onClick={handleGenerate}
-                    disabled={isGenerating || !topicInput.trim()}
-                    className="bg-[var(--teal)] hover:bg-teal-500 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-colors shrink-0 font-sans tracking-wide"
-                  >
-                    {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                    توليد المحتوى
-                  </button>
-                </div>
-                <p className="text-sm text-slate-500 font-sans">سيقوم الذكاء الاصطناعي ببناء هيكل كامل للدرس فوراً.</p>
-              </div>
-
-              {/* Editable Form Section (Visible after generation) */}
-              {generatedData && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pt-4 border-t border-[var(--dark-3)]">
-                  <h3 className="text-xl font-bold text-[var(--gold)] flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5" />
-                    المحتوى المقترح (قابل للتعديل)
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm text-slate-400 font-sans">عنوان الدرس (عربي)</label>
-                      <input 
-                        value={titleAr}
-                        onChange={(e) => setTitleAr(e.target.value)}
-                        className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-2 text-white font-amiri outline-none focus:border-[var(--gold)]" 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm text-slate-400 font-sans">Lesson Title (English)</label>
-                      <input 
-                        value={titleEn}
-                        onChange={(e) => setTitleEn(e.target.value)}
-                        dir="ltr"
-                        className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-2 text-white font-mono text-sm outline-none focus:border-[var(--gold)]" 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm text-slate-400 font-sans">الأهداف التعليمية (سطر لكل هدف)</label>
-                    <textarea 
-                      value={objectives}
-                      onChange={(e) => setObjectives(e.target.value)}
-                      rows={4}
-                      className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-3 text-white font-amiri leading-relaxed outline-none focus:border-[var(--gold)] resize-none" 
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <label className="text-sm text-slate-400 font-sans">هيكل محتوى الدرس</label>
-                    {sections.map((sec, idx) => (
-                      <div key={idx} className="bg-[var(--dark)] p-4 rounded-xl border border-slate-700 space-y-3">
-                        <input 
-                          value={sec.heading}
-                          onChange={(e) => {
-                            const newSecs = [...sections];
-                            newSecs[idx].heading = e.target.value;
-                            setSections(newSecs);
-                          }}
-                          className="w-full bg-transparent border-b border-slate-600 px-2 py-1 text-lg font-bold text-white font-amiri outline-none focus:border-[var(--teal)]" 
-                        />
-                        <textarea 
-                          value={sec.body}
-                          onChange={(e) => {
-                            const newSecs = [...sections];
-                            newSecs[idx].body = e.target.value;
-                            setSections(newSecs);
-                          }}
-                          rows={3}
-                          className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-[var(--cream)]/80 font-amiri leading-relaxed outline-none focus:border-[var(--teal)] resize-none" 
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="md:col-span-3 space-y-2">
-                      <label className="text-sm text-slate-400 font-sans">التمارين التطبيقية</label>
-                      <textarea 
-                        value={exercises}
-                        onChange={(e) => setExercises(e.target.value)}
-                        rows={3}
-                        className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-3 text-white font-amiri leading-relaxed outline-none focus:border-[var(--gold)] resize-none" 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm text-slate-400 font-sans">مدة الدرس (دقائق)</label>
-                      <input 
-                        type="number"
-                        value={duration}
-                        onChange={(e) => setDuration(e.target.value)}
-                        className="w-full bg-[var(--dark)] border border-slate-700 rounded-lg px-4 py-3 text-3xl text-center text-[var(--teal)] font-bold font-sans outline-none focus:border-[var(--gold)]" 
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-6 border-t border-[var(--dark-3)] bg-[var(--dark-2)] rounded-b-3xl shrink-0 flex justify-end gap-4">
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="px-6 py-2.5 rounded-xl text-slate-400 hover:text-white font-sans font-bold transition-colors"
-              >
-                إلغاء
-              </button>
-              <button 
-                onClick={handleSaveDraft}
-                disabled={!generatedData}
-                className="bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--dark)] font-bold py-2.5 px-8 rounded-xl transition-all shadow-lg font-sans tracking-wide"
-              >
-                حفظ كمسودة
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </div>
+    <TeacherDashboardClient
+      activeStudents={activeStudents}
+      publishedCourses={publishedCourses}
+      pendingReviews={pendingReviews}
+      totalEarnings={totalEarnings}
+      roster={roster}
+    />
   );
 }

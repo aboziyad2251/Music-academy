@@ -5,7 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Download, Printer, Search } from "lucide-react";
+import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { ChevronDown, ChevronUp, Download, Loader2, Printer, Search, UserPlus, X } from "lucide-react";
 
 interface StudentRow {
   id: string;
@@ -20,12 +22,21 @@ interface StudentRow {
 
 export default function TeacherStudentsPage() {
   const supabase = createClient();
+  const { t } = useLanguage();
+  const inv = t.invite;
+
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>("");
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Invite modal state
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteCourse, setInviteCourse] = useState("");
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -36,10 +47,37 @@ export default function TeacherStudentsPage() {
         .select("id, title")
         .eq("teacher_id", session.user.id);
       setCourses(data || []);
-      if (data && data.length > 0) setSelectedCourse(data[0].id);
+      if (data && data.length > 0) {
+        setSelectedCourse(data[0].id);
+        setInviteCourse(data[0].id);
+      }
       setLoading(false);
     })();
   }, []);
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail) return;
+    setInviting(true);
+    try {
+      const res = await fetch("/api/auth/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail, courseId: inviteCourse || undefined }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      toast.success(inv.success);
+      setShowInvite(false);
+      setInviteEmail("");
+      // Refresh students list
+      if (selectedCourse) fetchStudents(selectedCourse);
+    } catch (err: any) {
+      toast.error(err.message || inv.failed);
+    } finally {
+      setInviting(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedCourse) fetchStudents(selectedCourse);
@@ -162,9 +200,68 @@ export default function TeacherStudentsPage() {
 
   return (
     <div className="space-y-6 pb-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">My Students</h1>
-        <p className="text-slate-400 mt-1 text-sm">View enrolled student progress and performance.</p>
+
+      {/* Invite Student Modal */}
+      {showInvite && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-5 flex-no-flip">
+              <h3 className="text-lg font-bold text-white">{inv.modalTitle}</h3>
+              <button onClick={() => setShowInvite(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <form onSubmit={handleInvite} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {inv.emailLabel} <span className="text-red-400">*</span>
+                </label>
+                <Input
+                  type="email"
+                  required
+                  dir="ltr"
+                  placeholder="student@example.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-slate-200 placeholder:text-slate-600"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{inv.courseLabel}</label>
+                <select
+                  value={inviteCourse}
+                  onChange={(e) => setInviteCourse(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 text-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-amber-500"
+                >
+                  <option value="">{inv.noCourse}</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-3 justify-end pt-2 flex-no-flip">
+                <Button type="button" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                  onClick={() => setShowInvite(false)} disabled={inviting}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-amber-600 hover:bg-amber-700 text-white flex-no-flip" disabled={inviting}>
+                  {inviting ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <UserPlus className="h-4 w-4 me-2" />}
+                  {inviting ? inv.sending : inv.sendBtn}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between flex-no-flip">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">My Students</h1>
+          <p className="text-slate-400 mt-1 text-sm">View enrolled student progress and performance.</p>
+        </div>
+        <Button onClick={() => setShowInvite(true)} className="bg-amber-600 hover:bg-amber-700 text-white flex-no-flip">
+          <UserPlus className="h-4 w-4 me-2" /> {inv.inviteStudent}
+        </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">

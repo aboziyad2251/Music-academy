@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Users,
   Star,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,7 @@ export default function CourseDetailPage({
   const router = useRouter();
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
+  const [quizzes, setQuizzes] = useState<any[]>([]);
   const [progress, setProgress] = useState<Set<string>>(new Set());
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -65,6 +67,13 @@ export default function CourseDetailPage({
         .order("position", { ascending: true });
 
       if (lessonsData) setLessons(lessonsData);
+
+      // Load quizzes for this course
+      const quizRes = await fetch(`/api/quiz?courseId=${params.courseId}`);
+      if (quizRes.ok) {
+        const quizJson = await quizRes.json();
+        setQuizzes(quizJson.quizzes ?? []);
+      }
 
       const { count: totalEnrolled } = await supabase
         .from("enrollments")
@@ -290,6 +299,32 @@ export default function CourseDetailPage({
               </p>
             )}
           </div>
+          {/* Quizzes */}
+          {isEnrolled && quizzes.length > 0 && (
+            <div>
+              <h2 className="text-lg font-bold text-white mb-4">Quizzes</h2>
+              <div className="space-y-2">
+                {quizzes.map((quiz) => (
+                  <Link
+                    key={quiz.id}
+                    href={`/student/courses/${params.courseId}/quiz/${quiz.id}`}
+                    className="flex items-center justify-between p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-700 hover:bg-slate-800/80 transition-all group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-9 w-9 rounded-full bg-indigo-950 border border-indigo-800 flex items-center justify-center flex-shrink-0 group-hover:border-indigo-600">
+                        <ClipboardList className="h-4 w-4 text-indigo-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-slate-200 group-hover:text-white text-sm">{quiz.title}</h4>
+                        <p className="text-xs text-slate-600 mt-0.5">Passing score: {quiz.passing_score ?? 70}%</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-indigo-400 font-semibold group-hover:text-indigo-300">Take Quiz →</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Sticky Sidebar ── */}

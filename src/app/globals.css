@@ -80,11 +80,16 @@
 .font-arabic { font-family: 'Amiri', serif; }
 [dir='rtl'] table { direction: rtl; }
 [dir='rtl'] th, [dir='rtl'] td { text-align: right; }
-[dir='rtl'] .flex { flex-direction: row-reverse; }
+
+/* Only reverse horizontal (row) flex containers — NOT column ones */
+[dir='rtl'] .flex:not(.flex-col):not([class*="flex-col"]) { flex-direction: row-reverse; }
 [dir='rtl'] .breadcrumb { flex-direction: row-reverse; }
 [dir='rtl'] .sidebar { border-left: none; border-right: 1px solid rgba(212,160,23,0.15); }
 [dir='rtl'] .stat-card { text-align: right; }
 [dir='rtl'] .quick-action-btn { flex-direction: row-reverse; }
+
+/* Preserve column direction in RTL — critical for sidebar/panel layouts */
+[dir='rtl'] .flex-col { flex-direction: column !important; }
 
 /* Prevent flex-direction flip on things like Icons alongside Text */
 [dir='rtl'] .flex-no-flip { flex-direction: row !important; }

@@ -37,7 +37,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const NAV_LINKS = [
     { href: "/admin/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
@@ -146,10 +146,16 @@ export default function AdminShell({ user, children }: AdminShellProps) {
     </div>
   );
 
+  const isRtl = lang === "ar";
+
   return (
-    <div className="flex h-screen bg-slate-950 overflow-hidden">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col w-64 bg-slate-900 border-e border-slate-800 flex-shrink-0 relative before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[var(--gold)] before:to-[var(--teal)] z-20">
+    <div className="flex h-screen bg-slate-950 overflow-hidden" dir={isRtl ? "rtl" : "ltr"}>
+      {/* Desktop Sidebar — order-last puts it on the right in RTL flex-row */}
+      <aside className={cn(
+        "hidden lg:flex lg:flex-col w-64 bg-slate-900 flex-shrink-0 relative z-20",
+        "before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[var(--gold)] before:to-[var(--teal)]",
+        isRtl ? "border-s border-slate-800 order-last" : "border-e border-slate-800"
+      )}>
         <SidebarInner />
       </aside>
 
@@ -160,7 +166,11 @@ export default function AdminShell({ user, children }: AdminShellProps) {
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute start-0 top-0 bottom-0 w-64 bg-slate-900 border-e border-slate-800 flex flex-col z-10 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[var(--gold)] before:to-[var(--teal)]">
+          <aside className={cn(
+            "absolute top-0 bottom-0 w-64 bg-slate-900 flex flex-col z-10",
+            "before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[var(--gold)] before:to-[var(--teal)]",
+            isRtl ? "right-0 border-s border-slate-800" : "left-0 border-e border-slate-800"
+          )}>
             <button
               onClick={() => setSidebarOpen(false)}
               className="absolute top-4 end-4 p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
@@ -172,7 +182,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
         </div>
       )}
 
-      {/* Right panel */}
+      {/* Main panel */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 md:px-6 flex-shrink-0 z-10">
