@@ -15,7 +15,20 @@
       "Bash(node \"C:/Users/moham/AppData/Local/Temp/write_files.js\")",
       "Bash(node -e \":*)",
       "Bash(node \"C:/Users/moham/AppData/Local/Temp/write_phase1.js\")",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(ls \"c:\\\\Users\\\\moham\\\\Desktop\\\\Muisc acadmey\\\\src\\\\app\\\\api\\\\quiz\\\\submit\"\" 2>/dev/null || echo \"NOT_EXISTS \")",
+      "Bash(curl -s http://localhost:3001)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/admin/dashboard)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/teacher/dashboard)",
+      "Bash(ssh -o StrictHostKeyChecking=no root@76.13.40.119 \"docker --version\")",
+      "Bash(ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@76.13.40.119 \"docker --version\")",
+      "Bash(ssh -i ~/.ssh/id_ed25519 -v -o StrictHostKeyChecking=no root@76.13.40.119 \"echo ok\")",
+      "Bash(ssh-add -l)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o BatchMode=yes -i ~/.ssh/id_ed25519 root@76.13.40.119 \"echo connected\")",
+      "Bash(ssh-keygen -y -f ~/.ssh/id_ed25519)"
     ]
   }
 }
