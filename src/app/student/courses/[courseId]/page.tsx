@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Loader2,
   PlayCircle,
@@ -16,6 +17,7 @@ import {
   Users,
   Star,
   ClipboardList,
+  Award,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -157,7 +159,7 @@ export default function CourseDetailPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* ── Main Content ── */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-8 order-2 lg:order-1">
           {/* Hero */}
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -328,7 +330,7 @@ export default function CourseDetailPage({
         </div>
 
         {/* ── Sticky Sidebar ── */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 order-1 lg:order-2">
           <div className="sticky top-6 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
             {/* Thumbnail */}
             <div className="aspect-video w-full bg-slate-800 flex items-center justify-center relative overflow-hidden">
@@ -361,15 +363,45 @@ export default function CourseDetailPage({
                       You&apos;re enrolled!
                     </p>
                   </div>
-                  {lessons.length > 0 && (
+
+                  {/* Progress bar */}
+                  {totalLessons > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs text-slate-500">
+                        <span>Progress</span>
+                        <span className="font-medium text-slate-300">
+                          {completedCount}/{totalLessons} lessons
+                        </span>
+                      </div>
+                      <Progress
+                        value={Math.round((completedCount / totalLessons) * 100)}
+                        className="h-2 bg-slate-800"
+                      />
+                      <p className="text-right text-xs text-slate-600">
+                        {Math.round((completedCount / totalLessons) * 100)}% complete
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Certificate or Continue */}
+                  {completedCount === totalLessons && totalLessons > 0 ? (
+                    <Link href={`/student/courses/${course.id}/certificate`}>
+                      <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 h-11 font-bold">
+                        <Award className="me-2 h-4 w-4" />
+                        View Certificate
+                      </Button>
+                    </Link>
+                  ) : lessons.length > 0 ? (
                     <Link
-                      href={`/student/courses/${course.id}/lessons/${lessons[0]?.id}`}
+                      href={`/student/courses/${course.id}/lessons/${
+                        lessons.find((l) => !progress.has(l.id))?.id ?? lessons[0]?.id
+                      }`}
                     >
                       <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-11">
                         Continue Learning
                       </Button>
                     </Link>
-                  )}
+                  ) : null}
                 </div>
               ) : (
                 <Button

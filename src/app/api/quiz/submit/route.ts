@@ -15,10 +15,10 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient();
 
-  // Load quiz passing score
+  // Load quiz passing score + title
   const { data: quiz } = await supabase
     .from("quizzes")
-    .select("passing_score")
+    .select("passing_score, title")
     .eq("id", quizId)
     .single();
 
@@ -55,6 +55,15 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (subError) return NextResponse.json({ error: subError.message }, { status: 500 });
+
+  // Send in-app notification to student
+  await supabase.from("notifications").insert({
+    user_id: session.user.id,
+    message: passed
+      ? `You passed "${quiz.title}" with ${score}%! 🎉`
+      : `You scored ${score}% on "${quiz.title}". You need ${quiz.passing_score ?? 70}% to pass. Try again!`,
+    link: null,
+  });
 
   return NextResponse.json({
     score,

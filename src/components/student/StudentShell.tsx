@@ -202,7 +202,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
         </header>
 
         {/* Page Content */}
-        <main className={cn("flex-1 overflow-y-auto p-6 md:p-8", lang === 'ar' ? 'font-arabic text-right' : 'text-left')}>
+        <main className={cn("flex-1 overflow-y-auto p-4 md:p-6 lg:p-8", lang === 'ar' ? 'font-arabic text-right' : 'text-left')}>
           {children}
         </main>
       </div>

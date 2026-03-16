@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Music, CheckCircle2 } from "lucide-react";
@@ -22,64 +21,70 @@ export interface CourseCardProps {
 
 export default function CourseCard({ course, isEnrolled }: CourseCardProps) {
   return (
-    <Card className="flex flex-col h-full overflow-hidden transition-all hover:border-accent hover:shadow-md group">
-      <div className="relative aspect-video w-full overflow-hidden bg-slate-100 flex items-center justify-center">
+    <div className="flex flex-col h-full rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-700 overflow-hidden transition-all group shadow-lg hover:shadow-indigo-900/20">
+      {/* Thumbnail */}
+      <div className="relative aspect-video w-full overflow-hidden bg-slate-800 flex items-center justify-center flex-shrink-0">
         {course.thumbnail_url ? (
-          <Image 
-            src={course.thumbnail_url} 
-            alt={course.title} 
+          <Image
+            src={course.thumbnail_url}
+            alt={course.title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <Music className="h-12 w-12 text-slate-300" />
+          <Music className="h-10 w-10 text-slate-600" />
         )}
-        
-        <div className="absolute top-2 end-2 flex gap-2">
+        <div className="absolute top-2 end-2 flex gap-1.5">
           {isEnrolled && (
-            <Badge className="bg-green-500 hover:bg-green-600 flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3" /> Enrolled
+            <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] flex items-center gap-1 px-2 py-0.5">
+              <CheckCircle2 className="h-2.5 w-2.5" /> Enrolled
             </Badge>
           )}
-          <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm shadow-sm capitalize">
+          <Badge className="bg-slate-900/80 backdrop-blur-sm text-slate-300 border border-slate-700 text-[10px] capitalize px-2 py-0.5">
             {course.level}
           </Badge>
         </div>
       </div>
-      
-      <CardHeader className="flex-none pb-2 pt-4">
-        <div className="flex items-start justify-between">
-          <Badge variant="outline" className="text-xs mb-2 text-accent border-accent/20 bg-accent/5 capitalize">
+
+      {/* Body */}
+      <div className="flex flex-col flex-1 p-4 gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <Badge
+            variant="outline"
+            className="text-[10px] border-indigo-700/50 text-indigo-400 bg-indigo-950/40 capitalize shrink-0"
+          >
             {course.category}
           </Badge>
           {!isEnrolled && (
-            <span className="font-bold text-lg text-slate-900">
+            <span className="font-bold text-lg text-white leading-none shrink-0">
               ${course.price}
             </span>
           )}
         </div>
-        <CardTitle className="line-clamp-2 text-xl">{course.title}</CardTitle>
-      </CardHeader>
-      
-      <CardContent className="flex-1 pb-4">
-        <div className="flex items-center gap-2 text-sm text-slate-500 mt-2">
-          <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center">
-            <User className="h-3 w-3" />
+
+        <h3 className="font-bold text-white text-sm leading-snug line-clamp-2 flex-1">
+          {course.title}
+        </h3>
+
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0">
+            <User className="h-2.5 w-2.5 text-slate-400" />
           </div>
-          <span>{course.teacher?.full_name || "Instructor"}</span>
+          <span className="truncate">{course.teacher?.full_name ?? "Instructor"}</span>
         </div>
-      </CardContent>
-      
-      <CardFooter className="pt-0">
-        <Link href={`/student/courses/${course.id}`} className="w-full">
-          <Button 
-            className="w-full" 
-            variant={isEnrolled ? "outline" : "default"}
+
+        <Link href={`/student/courses/${course.id}`} className="mt-auto">
+          <Button
+            className={`w-full h-9 text-sm ${
+              isEnrolled
+                ? "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+                : "bg-indigo-600 hover:bg-indigo-700 text-white"
+            }`}
           >
-            {isEnrolled ? "View Course" : "Buy Now"}
+            {isEnrolled ? "Continue" : "View Course"}
           </Button>
         </Link>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

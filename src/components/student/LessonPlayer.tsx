@@ -8,6 +8,8 @@ import { CheckCircle2, PlayCircle } from "lucide-react";
 interface LessonPlayerProps {
   lessonId: string;
   studentId: string;
+  courseId: string;
+  courseTitle: string;
   videoUrl?: string | null;
   audioUrl?: string | null;
   pdfUrl?: string | null;
@@ -17,6 +19,8 @@ interface LessonPlayerProps {
 export default function LessonPlayer({
   lessonId,
   studentId,
+  courseId,
+  courseTitle,
   videoUrl,
   audioUrl,
   pdfUrl,
@@ -26,6 +30,38 @@ export default function LessonPlayer({
   const [loading, setLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createClient();
+
+  const checkCourseCompletion = async () => {
+    // Count total lessons in course
+    const { count: total } = await supabase
+      .from("lessons")
+      .select("id", { count: "exact", head: true })
+      .eq("course_id", courseId);
+
+    if (!total) return;
+
+    // Count completed lessons for this student in this course
+    const { data: lessonIds } = await supabase
+      .from("lessons")
+      .select("id")
+      .eq("course_id", courseId);
+
+    const ids = lessonIds?.map((l: any) => l.id) ?? [];
+    const { count: done } = await supabase
+      .from("lesson_progress")
+      .select("id", { count: "exact", head: true })
+      .eq("student_id", studentId)
+      .eq("completed", true)
+      .in("lesson_id", ids);
+
+    if (done === total) {
+      await supabase.from("notifications").insert({
+        user_id: studentId,
+        message: `🎉 You completed "${courseTitle}"! View your certificate.`,
+        link: `/student/courses/${courseId}/certificate`,
+      });
+    }
+  };
 
   const handleProgressUpsert = async (pct: number, markedComplete: boolean = false) => {
     try {
@@ -49,7 +85,7 @@ export default function LessonPlayer({
     }
   };
 
-  const handleTimeUpdate = () => {
+  const handleTimeUpdate = async () => {
     if (!videoRef.current || completed) return;
     
     const current = videoRef.current.currentTime;
@@ -61,7 +97,8 @@ export default function LessonPlayer({
       // Auto-complete at 80% mark natively to ensure progress is caught even if they don't click the explicit button
       if (percentage >= 80 && !completed) {
         setCompleted(true);
-        handleProgressUpsert(percentage, true);
+        await handleProgressUpsert(percentage, true);
+        await checkCourseCompletion();
       }
     }
   };
@@ -75,6 +112,7 @@ export default function LessonPlayer({
       : 100;
 
     await handleProgressUpsert(currentPct, true);
+    await checkCourseCompletion();
     setLoading(false);
   };
 

@@ -39,6 +39,7 @@ export default function LessonDetailPage({
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [lesson, setLesson] = useState<any>(null);
+  const [courseTitle, setCourseTitle] = useState<string>("");
   const [progress, setProgress] = useState<any>(null);
   const [siblings, setSiblings] = useState<{ prev: any; next: any }>({ prev: null, next: null });
   const [comments, setComments] = useState<any[]>([]);
@@ -80,6 +81,13 @@ export default function LessonDetailPage({
         .single();
 
       setLesson(lessonData);
+
+      const { data: courseData } = await supabase
+        .from("courses")
+        .select("title")
+        .eq("id", params.courseId)
+        .single();
+      if (courseData) setCourseTitle(courseData.title);
 
       if (lessonData) {
         const { data: progressData } = await supabase
@@ -261,6 +269,8 @@ export default function LessonDetailPage({
         <LessonPlayer
           lessonId={lesson.id}
           studentId={studentId}
+          courseId={params.courseId}
+          courseTitle={courseTitle}
           videoUrl={lesson.video_url}
           audioUrl={lesson.audio_url}
           pdfUrl={lesson.pdf_url}
