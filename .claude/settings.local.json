@@ -28,7 +28,8 @@
       "Bash(ssh -i ~/.ssh/id_ed25519 -v -o StrictHostKeyChecking=no root@76.13.40.119 \"echo ok\")",
       "Bash(ssh-add -l)",
       "Bash(ssh -o StrictHostKeyChecking=no -o BatchMode=yes -i ~/.ssh/id_ed25519 root@76.13.40.119 \"echo connected\")",
-      "Bash(ssh-keygen -y -f ~/.ssh/id_ed25519)"
+      "Bash(ssh-keygen -y -f ~/.ssh/id_ed25519)",
+      "Bash(grep -r lessons 'c:\\\\Users\\\\moham\\\\Desktop\\\\Muisc acadmey\\\\src\\\\app\\\\api' --include=*.ts)"
     ]
   }
 }

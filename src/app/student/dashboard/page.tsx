@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { PlayCircle, Clock, BookOpen, Trophy, Flame, ChevronLeft } from "lucide-react";
 
 interface ProgressData {
@@ -19,6 +20,7 @@ interface ActiveCourseData {
   title: string;
   teacher: string;
   nextLesson: string;
+  nextLessonId: string | null;
   progressPct: number;
 }
 
@@ -28,6 +30,7 @@ export default function StudentDashboard() {
   const [userName, setUserName] = useState("طالب");
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [course, setCourse] = useState<ActiveCourseData | null>(null);
+  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
   const supabase = createClient();
 
   useEffect(() => {
@@ -46,18 +49,19 @@ export default function StudentDashboard() {
       }
     };
 
-    // Fetch mock APIs
     const fetchMockData = async () => {
       try {
-        const [progRes, courseRes] = await Promise.all([
+        const [progRes, courseRes, enrolledRes] = await Promise.all([
           fetch("/api/student/progress"),
-          fetch("/api/student/courses/active")
+          fetch("/api/student/courses/active"),
+          fetch("/api/student/courses/enrolled"),
         ]);
-        
+
         if (progRes.ok) setProgress(await progRes.json());
         if (courseRes.ok) setCourse(await courseRes.json());
+        if (enrolledRes.ok) setEnrolledCourses(await enrolledRes.json());
       } catch (e) {
-        console.error("Error fetching mock data", e);
+        console.error("Error fetching data", e);
       }
     };
 
@@ -202,10 +206,17 @@ export default function StudentDashboard() {
               </div>
 
               <div className="shrink-0 w-full md:w-auto">
-                <button className="w-full md:w-auto bg-[var(--gold)] hover:bg-[var(--gold-light)] text-[var(--dark)] font-bold py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 shadow-[0_4px_20px_rgba(212,160,23,0.3)]">
+                <Link
+                  href={
+                    course.nextLessonId
+                      ? `/student/courses/${course.id}/lessons/${course.nextLessonId}`
+                      : `/student/courses/${course.id}`
+                  }
+                  className="w-full md:w-auto bg-[var(--gold)] hover:bg-[var(--gold-light)] text-[var(--dark)] font-bold py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-transform hover:scale-105 shadow-[0_4px_20px_rgba(212,160,23,0.3)]"
+                >
                   <PlayCircle className="w-6 h-6" />
                   <span className="text-lg tracking-wide">ابدأ الدرس</span>
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -313,6 +324,70 @@ export default function StudentDashboard() {
         </div>
 
       </div>
+
+      {/* MY COURSES PROGRESS */}
+      {enrolledCourses.length > 0 && (
+        <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] rounded-2xl overflow-hidden">
+          <div className="px-6 py-5 border-b border-[var(--dark-3)] flex items-center justify-between">
+            <h2 className="font-bold text-white text-lg flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-[var(--teal)]" />
+              دوراتي
+            </h2>
+            <span className="text-xs text-slate-500">{enrolledCourses.length} دورة</span>
+          </div>
+          <div className="divide-y divide-[var(--dark-3)]">
+            {enrolledCourses.map((c: any) => (
+              <Link
+                key={c.id}
+                href={
+                  c.nextLessonId
+                    ? `/student/courses/${c.id}/lessons/${c.nextLessonId}`
+                    : `/student/courses/${c.id}`
+                }
+                className="flex items-center gap-4 px-6 py-4 hover:bg-slate-800/40 transition-colors group"
+              >
+                {/* Thumbnail */}
+                <div className="w-12 h-12 rounded-lg bg-slate-800 flex-shrink-0 overflow-hidden">
+                  {c.thumbnail_url ? (
+                    <img src={c.thumbnail_url} alt={c.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-slate-600" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate group-hover:text-[var(--gold)] transition-colors">{c.title}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{c.completedLessons}/{c.totalLessons} دروس مكتملة</p>
+                  <div className="mt-2 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${c.progressPct}%`,
+                        background: c.progressPct === 100
+                          ? "var(--teal)"
+                          : "linear-gradient(to left, var(--teal), var(--gold))",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Percentage */}
+                <div className="flex-shrink-0 text-right">
+                  {c.progressPct === 100 ? (
+                    <span className="text-xs font-bold text-[var(--teal)]">✓ مكتمل</span>
+                  ) : (
+                    <span className="text-sm font-bold text-white">{c.progressPct}%</span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

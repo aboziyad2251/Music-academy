@@ -88,6 +88,7 @@ export async function GET() {
       title: course?.title ?? "دورة",
       teacher: teacher?.full_name ?? "المعلم",
       nextLesson: nextLesson?.title ?? "الدرس الأول",
+      nextLessonId: nextLesson?.id ?? null,
       progressPct,
     });
   }
@@ -101,6 +102,7 @@ export async function GET() {
     title: course?.title ?? "دورة",
     teacher: teacher?.full_name ?? "المعلم",
     nextLesson: "مراجعة الدورة",
+    nextLessonId: null,
     progressPct: 100,
   });
 }
