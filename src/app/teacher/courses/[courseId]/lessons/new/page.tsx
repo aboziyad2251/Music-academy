@@ -21,6 +21,8 @@ export default function AddLessonPage({ params }: { params: { courseId: string }
   const [description, setDescription] = useState("");
   const [durationMin, setDurationMin] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [mediaMode, setMediaMode] = useState<"upload" | "url">("upload");
+  const [videoUrl, setVideoUrl] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -59,7 +61,10 @@ export default function AddLessonPage({ params }: { params: { courseId: string }
       let fileUrl = null;
       let mediaType = "";
 
-      if (file) {
+      if (mediaMode === "url" && videoUrl.trim()) {
+        fileUrl = videoUrl.trim();
+        mediaType = "video_url";
+      } else if (file) {
         if (file.type.startsWith("video/")) mediaType = "video_url";
         else if (file.type.startsWith("audio/")) mediaType = "audio_url";
         else if (file.type === "application/pdf") mediaType = "pdf_url";
@@ -89,7 +94,7 @@ export default function AddLessonPage({ params }: { params: { courseId: string }
           .getPublicUrl(filePath);
 
         fileUrl = publicUrl;
-      }
+      } // end file upload block
 
       const { count } = await supabase
         .from("lessons")
@@ -171,13 +176,42 @@ export default function AddLessonPage({ params }: { params: { courseId: string }
           />
         </div>
 
-        {/* Media Upload */}
+        {/* Media Section */}
         <div className="space-y-3 pt-4 border-t border-slate-800">
-          <label className="text-sm font-semibold text-slate-300">
-            Upload Material <span className="text-slate-600 font-normal">(optional)</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-semibold text-slate-300">
+              Lesson Media <span className="text-slate-600 font-normal">(optional)</span>
+            </label>
+            <div className="flex rounded-lg overflow-hidden border border-slate-700 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => setMediaMode("upload")}
+                className={`px-3 py-1.5 transition-colors ${mediaMode === "upload" ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-400 hover:text-white"}`}
+              >
+                Upload File
+              </button>
+              <button
+                type="button"
+                onClick={() => setMediaMode("url")}
+                className={`px-3 py-1.5 transition-colors ${mediaMode === "url" ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-400 hover:text-white"}`}
+              >
+                YouTube / Vimeo URL
+              </button>
+            </div>
+          </div>
 
-          {file ? (
+          {mediaMode === "url" ? (
+            <div className="space-y-2">
+              <Input
+                placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                disabled={loading}
+                className="bg-slate-950 border-slate-700 text-white placeholder:text-slate-600"
+              />
+              <p className="text-xs text-slate-500">Paste a YouTube or Vimeo link. The video will be embedded in the lesson player.</p>
+            </div>
+          ) : file ? (
             <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-800 border border-slate-700">
               {getFileIcon()}
               <div className="flex-1 min-w-0">

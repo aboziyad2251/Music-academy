@@ -7,3 +7,7 @@ Claude will load the plan and start building all 5 items in order. Good night!
 
 
 "Continue building the Music Academy app — check memory for current state"
+
+
+"Continue building the Music Academy app — start with Priority 1: video lessons"
+

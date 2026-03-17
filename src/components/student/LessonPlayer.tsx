@@ -1,9 +1,23 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, PlayCircle } from "lucide-react";
+
+function getEmbedUrl(url: string): { type: "youtube" | "vimeo" | "file"; embedUrl: string } {
+  // YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+  if (ytMatch) {
+    return { type: "youtube", embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?enablejsapi=1` };
+  }
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch) {
+    return { type: "vimeo", embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}` };
+  }
+  return { type: "file", embedUrl: url };
+}
 
 interface LessonPlayerProps {
   lessonId: string;
@@ -116,21 +130,31 @@ export default function LessonPlayer({
     setLoading(false);
   };
 
+  const videoMeta = videoUrl ? getEmbedUrl(videoUrl) : null;
+
   return (
     <div className="space-y-6">
       {/* Video Content */}
-      {videoUrl ? (
+      {videoMeta ? (
         <div className="aspect-video w-full overflow-hidden rounded-xl bg-slate-950 border shadow-lg relative">
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            controls
-            controlsList="nodownload"
-            className="h-full w-full object-contain"
-            onTimeUpdate={handleTimeUpdate}
-            // For placeholder demo functionality when bad URLs are provided:
-            poster="/placeholder-video-poster.jpg" 
-          />
+          {videoMeta.type === "file" ? (
+            <video
+              ref={videoRef}
+              src={videoMeta.embedUrl}
+              controls
+              controlsList="nodownload"
+              className="h-full w-full object-contain"
+              onTimeUpdate={handleTimeUpdate}
+              poster="/placeholder-video-poster.jpg"
+            />
+          ) : (
+            <iframe
+              src={videoMeta.embedUrl}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          )}
         </div>
       ) : (
         <div className="aspect-video w-full rounded-xl bg-slate-900 flex flex-col items-center justify-center border-2 border-dashed border-slate-700 text-slate-500">
