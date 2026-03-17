@@ -6,7 +6,7 @@ export default async function HomePage() {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
-    redirect("/login");
+    redirect("/courses");
   }
 
   const { data: profile } = await supabase
