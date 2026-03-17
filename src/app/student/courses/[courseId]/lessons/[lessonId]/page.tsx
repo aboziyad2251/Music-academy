@@ -40,6 +40,7 @@ export default function LessonDetailPage({
 
   const [lesson, setLesson] = useState<any>(null);
   const [courseTitle, setCourseTitle] = useState<string>("");
+  const [courseTeacherId, setCourseTeacherId] = useState<string>("");
   const [progress, setProgress] = useState<any>(null);
   const [siblings, setSiblings] = useState<{ prev: any; next: any }>({ prev: null, next: null });
   const [comments, setComments] = useState<any[]>([]);
@@ -84,10 +85,13 @@ export default function LessonDetailPage({
 
       const { data: courseData } = await supabase
         .from("courses")
-        .select("title")
+        .select("title, teacher_id")
         .eq("id", params.courseId)
         .single();
-      if (courseData) setCourseTitle(courseData.title);
+      if (courseData) {
+        setCourseTitle(courseData.title);
+        setCourseTeacherId(courseData.teacher_id ?? "");
+      }
 
       if (lessonData) {
         const { data: progressData } = await supabase
@@ -424,19 +428,26 @@ export default function LessonDetailPage({
               </div>
             ) : (
               <div className="space-y-5">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3">
-                    <Avatar className="h-8 w-8 border border-slate-700 flex-shrink-0">
+                {comments.map((comment) => {
+                  const isTeacher = comment.author_id === courseTeacherId;
+                  return (
+                  <div key={comment.id} className={`flex gap-3 ${isTeacher ? "flex-row" : ""}`}>
+                    <Avatar className={`h-8 w-8 flex-shrink-0 border ${isTeacher ? "border-amber-600/60" : "border-slate-700"}`}>
                       <AvatarImage src={comment.author?.avatar_url ?? ""} />
-                      <AvatarFallback className="bg-indigo-900 text-indigo-300 text-xs">
+                      <AvatarFallback className={`text-xs ${isTeacher ? "bg-amber-900 text-amber-300" : "bg-indigo-900 text-indigo-300"}`}>
                         {comment.author?.full_name?.substring(0, 2).toUpperCase() ?? "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-xs text-slate-300">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`font-semibold text-xs ${isTeacher ? "text-amber-400" : "text-slate-300"}`}>
                           {comment.author?.full_name ?? "Student"}
                         </span>
+                        {isTeacher && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-700/50 px-1.5 py-0.5 rounded-full">
+                            Teacher
+                          </span>
+                        )}
                         <span className="text-xs text-slate-600">
                           {new Date(comment.created_at).toLocaleDateString(undefined, {
                             month: "short",
@@ -446,12 +457,17 @@ export default function LessonDetailPage({
                           })}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-300 bg-slate-800 rounded-tr-xl rounded-b-xl border border-slate-700/50 px-3 py-2 leading-relaxed">
+                      <p className={`text-sm text-slate-300 rounded-tr-xl rounded-b-xl px-3 py-2 leading-relaxed border ${
+                        isTeacher
+                          ? "bg-amber-950/40 border-amber-800/50 text-amber-100"
+                          : "bg-slate-800 border-slate-700/50"
+                      }`}>
                         {comment.content}
                       </p>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
