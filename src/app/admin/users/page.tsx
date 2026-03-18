@@ -16,6 +16,7 @@ import {
   UserPlus,
   Trash2,
   X,
+  BookOpen,
 } from "lucide-react";
 
 interface User {
@@ -59,6 +60,43 @@ export default function AdminUsersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ email: "", password: "", fullName: "", role: "student" });
   const [adding, setAdding] = useState(false);
+
+  // Enroll in course modal
+  const [enrollTarget, setEnrollTarget] = useState<User | null>(null);
+  const [courses, setCourses] = useState<{ id: string; title: string }[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [enrolling, setEnrolling] = useState(false);
+
+  const openEnrollModal = async (u: User) => {
+    setEnrollTarget(u);
+    setSelectedCourseId("");
+    if (courses.length === 0) {
+      const res = await fetch("/api/admin/courses");
+      const json = await res.json();
+      setCourses(json.courses ?? []);
+    }
+  };
+
+  const handleEnroll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!enrollTarget || !selectedCourseId) return;
+    setEnrolling(true);
+    try {
+      const res = await fetch("/api/admin/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: enrollTarget.id, courseId: selectedCourseId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      toast.success(`${enrollTarget.full_name || enrollTarget.email} enrolled successfully.`);
+      setEnrollTarget(null);
+    } catch (err: any) {
+      toast.error(err.message || "Enrollment failed");
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   // Invite by email modal
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -190,6 +228,50 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6 pb-6">
+
+      {/* Enroll in Course Modal */}
+      {enrollTarget && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-5 flex-no-flip">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-amber-400" />
+                Enroll in Course
+              </h3>
+              <button onClick={() => setEnrollTarget(null)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-400 mb-4">
+              Enroll <span className="text-white font-semibold">{enrollTarget.full_name || enrollTarget.email}</span> into a course without payment.
+            </p>
+            <form onSubmit={handleEnroll} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Select Course <span className="text-red-400">*</span></label>
+                <select
+                  required
+                  value={selectedCourseId}
+                  onChange={(e) => setSelectedCourseId(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 text-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-amber-500"
+                >
+                  <option value="">— Choose a course —</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-3 justify-end pt-2 flex-no-flip">
+                <Button type="button" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                  onClick={() => setEnrollTarget(null)} disabled={enrolling}>Cancel</Button>
+                <Button type="submit" className="bg-amber-600 hover:bg-amber-700 text-white flex-no-flip" disabled={enrolling || !selectedCourseId}>
+                  {enrolling ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <BookOpen className="h-4 w-4 me-2" />}
+                  Enroll
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Confirm Dialog */}
       {confirmAction && (
@@ -402,6 +484,12 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center justify-end gap-2 flex-no-flip">
+                      {u.role === "student" && (
+                        <button onClick={() => openEnrollModal(u)}
+                          className="p-1.5 rounded-lg text-slate-600 hover:text-amber-400 hover:bg-amber-900/30 transition-colors" title="Enroll in course">
+                          <BookOpen className="h-4 w-4" />
+                        </button>
+                      )}
                       <button onClick={() => setConfirmAction({ type: "suspend", userId: u.id })}
                         className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${u.is_active ? "bg-red-900/40 text-red-400 hover:bg-red-900/70" : "bg-emerald-900/40 text-emerald-400 hover:bg-emerald-900/70"}`}>
                         {u.is_active ? ut.suspend : ut.reinstate}
