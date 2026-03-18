@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Search, CheckCircle, XCircle, Archive, Trash2, ShieldAlert, BookOpen, Users, DollarSign, Loader2, Edit } from "lucide-react";
+import { Search, CheckCircle, XCircle, Archive, Trash2, ShieldAlert, BookOpen, Users, DollarSign, Loader2, Edit, UserPlus, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -19,6 +19,14 @@ interface Course {
   revenue: number;
 }
 
+interface UserResult {
+  id: string;
+  full_name: string | null;
+  email: string;
+  role: string;
+  alreadyEnrolled: boolean;
+}
+
 const TABS = ["All", "Pending Review", "Draft", "Published", "Archived"] as const;
 
 export default function AdminCoursesPage() {
@@ -29,6 +37,13 @@ export default function AdminCoursesPage() {
   const [confirmAction, setConfirmAction] = useState<{ type: "approve" | "reject" | "archive" | "delete"; courseId: string; courseName?: string } | null>(null);
   const [actioning, setActioning] = useState(false);
 
+  // Enroll modal
+  const [enrollModal, setEnrollModal] = useState<{ courseId: string; courseTitle: string } | null>(null);
+  const [userSearch, setUserSearch] = useState("");
+  const [userResults, setUserResults] = useState<UserResult[]>([]);
+  const [userSearchLoading, setUserSearchLoading] = useState(false);
+  const [enrolling, setEnrolling] = useState<string | null>(null);
+
   const fetchCourses = useCallback(async () => {
     setLoading(true);
     const res = await fetch("/api/admin/courses");
@@ -38,6 +53,43 @@ export default function AdminCoursesPage() {
   }, []);
 
   useEffect(() => { fetchCourses(); }, [fetchCourses]);
+
+  // Enroll modal handlers
+  const searchUsers = useCallback(async (query: string, courseId: string) => {
+    setUserSearchLoading(true);
+    const res = await fetch(`/api/admin/enroll?search=${encodeURIComponent(query)}&courseId=${courseId}`);
+    if (res.ok) { const d = await res.json(); setUserResults(d.users ?? []); }
+    setUserSearchLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!enrollModal) return;
+    const t = setTimeout(() => searchUsers(userSearch, enrollModal.courseId), 300);
+    return () => clearTimeout(t);
+  }, [userSearch, enrollModal, searchUsers]);
+
+  useEffect(() => {
+    if (enrollModal) { setUserSearch(""); setUserResults([]); searchUsers("", enrollModal.courseId); }
+  }, [enrollModal]);
+
+  const handleEnroll = async (userId: string) => {
+    if (!enrollModal) return;
+    setEnrolling(userId);
+    const res = await fetch("/api/admin/enroll", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, courseId: enrollModal.courseId }),
+    });
+    if (res.ok) {
+      toast.success("Student enrolled successfully!");
+      searchUsers(userSearch, enrollModal.courseId);
+      fetchCourses();
+    } else {
+      const d = await res.json();
+      toast.error(d.error ?? "Enrollment failed");
+    }
+    setEnrolling(null);
+  };
 
   const pendingCount = courses.filter((c) => c.status === "pending_review").length;
 
@@ -90,6 +142,59 @@ export default function AdminCoursesPage() {
 
   return (
     <div className="space-y-6 pb-6">
+      {/* Enroll Modal */}
+      {enrollModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+              <div>
+                <h3 className="font-bold text-white flex items-center gap-2"><UserPlus className="h-4 w-4 text-indigo-400" /> Enroll User</h3>
+                <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[280px]">{enrollModal.courseTitle}</p>
+              </div>
+              <button onClick={() => setEnrollModal(null)} className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="px-5 py-4 border-b border-slate-800">
+              <div className="relative">
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="ps-9 bg-slate-800 border-slate-700 text-slate-200 placeholder:text-slate-500"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto divide-y divide-slate-800">
+              {userSearchLoading ? (
+                <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-slate-500" /></div>
+              ) : userResults.length === 0 ? (
+                <p className="text-center text-slate-500 text-sm py-8">No users found</p>
+              ) : userResults.map((u) => (
+                <div key={u.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-800/40 transition-colors">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{u.full_name ?? "—"}</p>
+                    <p className="text-xs text-slate-500 truncate">{u.email} · <span className="capitalize">{u.role}</span></p>
+                  </div>
+                  {u.alreadyEnrolled ? (
+                    <span className="text-xs text-emerald-400 font-semibold flex-shrink-0 ms-3">Enrolled ✓</span>
+                  ) : (
+                    <button
+                      onClick={() => handleEnroll(u.id)}
+                      disabled={enrolling === u.id}
+                      className="ms-3 flex-shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {enrolling === u.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserPlus className="h-3 w-3" />}
+                      Enroll
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmAction && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
@@ -186,6 +291,14 @@ export default function AdminCoursesPage() {
                   <td className="px-5 py-3.5 text-emerald-400 font-medium tabular-nums hidden lg:table-cell">${c.revenue}</td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-1.5 justify-end">
+                      {/* Enroll user button — always visible */}
+                      <button
+                        onClick={() => setEnrollModal({ courseId: c.id, courseTitle: c.title })}
+                        className="p-1.5 rounded-lg text-indigo-400 hover:bg-indigo-900/40"
+                        title="Enroll User"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </button>
                       {c.status === "pending_review" && (
                         <>
                           <button
