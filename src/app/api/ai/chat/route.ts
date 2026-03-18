@@ -88,7 +88,9 @@ COMMUNICATION RULES:
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Gemini API Error:", errorText);
-      return NextResponse.json({ error: "AI service temporarily unavailable" }, { status: 500 });
+      let geminiError = "AI service temporarily unavailable";
+      try { geminiError = JSON.parse(errorText)?.error?.message ?? geminiError; } catch {}
+      return NextResponse.json({ error: geminiError }, { status: 500 });
     }
 
     const data = await response.json();
