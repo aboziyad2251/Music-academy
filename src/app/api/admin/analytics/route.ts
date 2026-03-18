@@ -5,15 +5,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function GET() {
   // Verify admin
   const supabaseUser = createServerClient();
-  const { data: { session } } = await supabaseUser.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data: { user } } = await supabaseUser.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const supabase = createAdminClient();
 
   const { data: caller } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   if (!caller || caller.role !== "admin") {

@@ -5,9 +5,9 @@ export async function POST(req: Request) {
   try {
     const { courseId } = await req.json();
     const supabase = createServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         .from("enrollments")
         .insert({
           course_id: courseId,
-          student_id: session.user.id,
+          student_id: user.id,
           stripe_payment_id: "free_enrollment",
         });
 
@@ -77,8 +77,8 @@ export async function POST(req: Request) {
         },
         quantity: 1,
       }],
-      client_reference_id: session.user.id,
-      metadata: { courseId: course.id, studentId: session.user.id },
+      client_reference_id: user.id,
+      metadata: { courseId: course.id, studentId: user.id },
       success_url: `${appUrl}/student/courses/${course.id}?enrolled=true`,
       cancel_url: `${appUrl}/student/courses/${course.id}`,
     });

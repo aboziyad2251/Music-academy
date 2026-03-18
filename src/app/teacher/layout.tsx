@@ -8,16 +8,16 @@ export default async function TeacherLayout({
   children: React.ReactNode;
 }) {
   const supabase = createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect("/login");
   }
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, avatar_url, role")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   // Fetch ungraded submissions count
@@ -43,7 +43,7 @@ export default async function TeacherLayout({
                     await supabase
                       .from("courses")
                       .select("id")
-                      .eq("teacher_id", session.user.id)
+                      .eq("teacher_id", user.id)
                   ).data?.map((c: any) => c.id) ?? []
                 )
             ).data?.map((l: any) => l.id) ?? []

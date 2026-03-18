@@ -5,7 +5,7 @@ import { checkHourlyRateLimit } from "@/lib/rate-limit";
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" }); // Assuming a generic latest pro specifier, fallback to 2.0 or 1.5 if needed
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Assuming a generic latest pro specifier, fallback to 2.0 or 1.5 if needed
 
 const SYSTEM_PROMPT = `
 You are an expert Arabic music theory tutor for Academy of the Maqam (أكاديمية المقام).
@@ -25,18 +25,18 @@ Ensure the JSON is strictly well-formed and avoid markdown code fences around th
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const { data: { user } } = await supabase.auth.getUser();
+
     // Auth validation
-    if (!session) {
+    if (!user) {
       return NextResponse.json(
-        { error: "عذراً، يجب تسجيل الدخول للوصول إلى المعلم الذكي.", response: "عذراً، يجب تسجيل الدخول للوصول إلى المعلم الذكي.", suggestions: [] }, 
+        { error: "عذراً، يجب تسجيل الدخول للوصول إلى المعلم الذكي.", response: "عذراً، يجب تسجيل الدخول للوصول إلى المعلم الذكي.", suggestions: [] },
         { status: 401 }
       );
     }
 
     // Rate Limiting (20 requests per user per hour)
-    const rateLimit = checkHourlyRateLimit(`tutor_${session.user.id}`, 20);
+    const rateLimit = checkHourlyRateLimit(`tutor_${user.id}`, 20);
     if (!rateLimit.success) {
       return NextResponse.json(
         { 
@@ -97,13 +97,13 @@ export async function POST(req: NextRequest) {
 
     // Async logging to database for Admin Analytics without blocking the response
     supabase.from('ai_interactions').insert({
-        user_id: session.user.id,
+        user_id: user.id,
         endpoint: '/api/ai/music-tutor',
         language: language,
         context: context,
         prompt: message,
         response: parsedResponse.response,
-        model_used: 'gemini-2.5-pro'
+        model_used: 'gemini-2.0-flash'
     }).then(({ error }) => {
         if (error) console.error("Error logging AI interaction:", error);
     });

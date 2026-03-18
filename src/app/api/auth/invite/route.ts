@@ -6,10 +6,10 @@ export async function POST(req: NextRequest) {
   // Verify the caller is an authenticated admin or teacher
   const supabaseUser = createServerClient();
   const {
-    data: { session },
-  } = await supabaseUser.auth.getSession();
+    data: { user },
+  } = await supabaseUser.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   const { data: caller } = await supabase
     .from("profiles")
     .select("role, full_name")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   if (!caller || (caller.role !== "admin" && caller.role !== "teacher")) {
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       .select("id, teacher_id")
       .eq("id", courseId)
       .single();
-    if (!course || course.teacher_id !== session.user.id) {
+    if (!course || course.teacher_id !== user.id) {
       return NextResponse.json({ error: "You can only invite students to your own courses." }, { status: 403 });
     }
   }
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     data: {
       full_name: fullName || "",
       role: "student",
-      invited_by: session.user.id,
+      invited_by: user.id,
     },
   });
 

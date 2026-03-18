@@ -4,8 +4,8 @@ import { createServerClient } from "@/lib/supabase/server";
 export async function POST(req: NextRequest) {
   const supabase = createServerClient();
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   if (!profile || !["teacher", "admin"].includes(profile.role)) {
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   const { data: course, error } = await supabase
     .from("courses")
     .insert({
-      teacher_id: session.user.id,
+      teacher_id: user.id,
       title,
       description: fullDescription || null,
       status: "draft",

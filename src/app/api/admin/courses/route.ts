@@ -5,7 +5,7 @@ export async function GET() {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("courses")
-    .select("id, title, status, price, created_at, teacher:teacher_id(full_name)")
+    .select("id, title, status, price, thumbnail_url, created_at, teacher:teacher_id(full_name)")
     .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

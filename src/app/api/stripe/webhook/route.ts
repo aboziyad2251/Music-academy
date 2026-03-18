@@ -9,10 +9,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true, note: "Stripe disabled" }, { status: 200 });
   }
 
-  // Dynamic import so it doesn't crash when stripe isn't configured
   const Stripe = (await import("stripe")).default;
   const stripe = new Stripe(stripeKey, { apiVersion: "2024-04-10" as any });
-  const { createServerClient } = await import("@/lib/supabase/server");
+
+  // Must use admin client — webhook has no user session, RLS would block inserts
+  const { createAdminClient } = await import("@/lib/supabase/admin");
 
   const body = await req.text();
   const signature = req.headers.get("stripe-signature") as string;
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     const studentId = session.metadata?.studentId;
 
     if (courseId && studentId) {
-      const supabase = createServerClient();
+      const supabase = createAdminClient();
 
       // Idempotency: skip if already enrolled (e.g. webhook delivered twice)
       const { data: existing } = await supabase
@@ -42,11 +43,29 @@ export async function POST(req: Request) {
         .maybeSingle();
 
       if (!existing) {
-        await supabase.from("enrollments").insert({
+        const { error: enrollError } = await supabase.from("enrollments").insert({
           course_id: courseId,
           student_id: studentId,
           stripe_payment_id: session.id,
         });
+
+        if (!enrollError) {
+          // Fetch course title for the notification
+          const { data: course } = await supabase
+            .from("courses")
+            .select("title")
+            .eq("id", courseId)
+            .single();
+
+          // Send in-app notification to student
+          await supabase.from("notifications").insert({
+            user_id: studentId,
+            message: `Payment successful! You are now enrolled in "${course?.title ?? "the course"}".`,
+            link: `/student/courses/${courseId}`,
+          });
+        } else {
+          console.error("Webhook enrollment insert failed:", enrollError.message);
+        }
       }
     }
   }

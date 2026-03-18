@@ -3,17 +3,17 @@ import { createServerClient } from "@/lib/supabase/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const { data: { user } } = await supabase.auth.getUser();
+
     // Auth validation
-    if (!session) {
+    if (!user) {
       return NextResponse.json(
-        { error: "Unauthorized" }, 
+        { error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -72,12 +72,12 @@ Output format (JSON):
 
     // Optionally log this into ai_interactions
     supabase.from('ai_interactions').insert({
-        user_id: session.user.id,
+        user_id: user.id,
         endpoint: '/api/ai/course-generator',
         context: 'course_generation',
         prompt: topic,
         response: 'JSON structure generated successfully',
-        model_used: 'gemini-2.5-pro'
+        model_used: 'gemini-2.0-flash'
     }).then(({ error }) => {
         if (error) console.error("Error logging AI interaction:", error);
     });

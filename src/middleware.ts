@@ -33,8 +33,8 @@ export async function middleware(req: NextRequest) {
   );
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const pathname = req.nextUrl.pathname;
 
@@ -45,7 +45,7 @@ export async function middleware(req: NextRequest) {
 
   // Protect AI API routes, must return JSON instead of redirect
   if (pathname.startsWith("/api/ai")) {
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     return res;
@@ -59,7 +59,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/courses");
 
-  if (!session) {
+  if (!user) {
     if (pathname === "/login") return res;
     if (isProtectedPath) return NextResponse.redirect(new URL("/login", req.url));
     return res;
@@ -69,7 +69,7 @@ export async function middleware(req: NextRequest) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   const role = profile?.role || "student";
@@ -84,6 +84,7 @@ export async function middleware(req: NextRequest) {
         : "/student/dashboard";
     return NextResponse.redirect(new URL(dest, req.url));
   }
+
 
   // /admin/* → only role 'admin' allowed
   if (pathname.startsWith("/admin")) {

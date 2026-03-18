@@ -5,12 +5,12 @@ import { checkRateLimit } from "@/lib/rate-limit";
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rateLimit = checkRateLimit(session.user.id);
+    const rateLimit = checkRateLimit(user.id);
     if (!rateLimit.success) {
       return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
     }

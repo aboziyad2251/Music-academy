@@ -21,8 +21,8 @@ export async function GET(req: NextRequest) {
 // POST /api/quiz  — create a quiz with questions
 export async function POST(req: NextRequest) {
   const supabaseUser = createServerClient();
-  const { data: { session } } = await supabaseUser.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data: { user } } = await supabaseUser.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const supabase = createAdminClient();
 
@@ -41,10 +41,10 @@ export async function POST(req: NextRequest) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
-  if (!course || (course.teacher_id !== session.user.id && profile?.role !== "admin")) {
+  if (!course || (course.teacher_id !== user.id && profile?.role !== "admin")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       title,
       description: description || null,
       passing_score: passingScore ?? 70,
-      created_by: session.user.id,
+      created_by: user.id,
     })
     .select("id")
     .single();

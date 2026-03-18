@@ -243,12 +243,21 @@ export default function EditCoursePage({ params }: { params: { courseId: string 
               ) : (
                 <ImageIcon className="mx-auto h-12 w-12 text-slate-600" />
               )}
-              <div className="mt-4 flex flex-col items-center text-sm text-slate-500">
+              <div className="mt-4 flex flex-col items-center gap-2 text-sm text-slate-500">
                 <label htmlFor="thumb-upload" className="cursor-pointer font-semibold text-emerald-400 hover:text-emerald-300">
                   <span>{previewUrl ? "Change Image" : "Upload a file"}</span>
                   <input id="thumb-upload" type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
                 </label>
-                <p className="mt-1">PNG, JPG, GIF up to 5MB</p>
+                <p>PNG, JPG, GIF up to 5MB</p>
+                {previewUrl && (
+                  <button
+                    type="button"
+                    onClick={() => { setFile(null); setPreviewUrl(null); setFormData((prev) => ({ ...prev, thumbnail_url: "" })); }}
+                    className="text-xs text-red-400 hover:text-red-300 underline mt-1"
+                  >
+                    Remove thumbnail
+                  </button>
+                )}
               </div>
             </div>
           </div>

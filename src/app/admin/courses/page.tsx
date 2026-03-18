@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Search, CheckCircle, XCircle, Archive, Trash2, ShieldAlert, BookOpen, Users, DollarSign, Loader2, PlusCircle, Edit } from "lucide-react";
+import { Search, CheckCircle, XCircle, Archive, Trash2, ShieldAlert, BookOpen, Users, DollarSign, Loader2, Edit } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Course {
   id: string;
   title: string;
   teacher_name: string;
+  thumbnail_url: string | null;
   status: "draft" | "pending_review" | "published" | "archived";
   enrolled: number;
   revenue: number;
@@ -168,8 +170,12 @@ export default function AdminCoursesPage() {
                 <tr key={c.id} className="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0">
-                        <BookOpen className="h-4 w-4 text-amber-400" />
+                      <div className="h-9 w-14 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                        {c.thumbnail_url ? (
+                          <Image src={c.thumbnail_url} alt={c.title} fill className="object-cover" />
+                        ) : (
+                          <BookOpen className="h-4 w-4 text-amber-400" />
+                        )}
                       </div>
                       <span className="text-slate-200 font-medium">{c.title}</span>
                     </div>

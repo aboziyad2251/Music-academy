@@ -20,7 +20,8 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 export default function CourseDetailPage({
   params,
@@ -28,6 +29,7 @@ export default function CourseDetailPage({
   params: { courseId: string };
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
@@ -36,8 +38,20 @@ export default function CourseDetailPage({
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [enrollmentCount, setEnrollmentCount] = useState<number | null>(null);
+  const [enrollSuccess, setEnrollSuccess] = useState(false);
 
   const supabase = createClient();
+
+  // Show success banner when returning from Stripe checkout
+  useEffect(() => {
+    if (searchParams.get("enrolled") === "true") {
+      setEnrollSuccess(true);
+      setIsEnrolled(true); // Optimistic: webhook may not have fired yet
+      toast.success("You're enrolled! Welcome to the course.");
+      // Clean up the URL param without triggering a refetch
+      router.replace(`/student/courses/${params.courseId}`);
+    }
+  }, [searchParams, params.courseId, router]);
 
   useEffect(() => {
     async function fetchCourseDetails() {
@@ -114,9 +128,11 @@ export default function CourseDetailPage({
       if (data.url) {
         window.location.href = data.url;
       } else {
+        toast.error(data.error || "Could not start checkout. Please try again.");
         setCheckoutLoading(false);
       }
     } catch {
+      toast.error("Network error. Please try again.");
       setCheckoutLoading(false);
     }
   };
@@ -149,6 +165,17 @@ export default function CourseDetailPage({
 
   return (
     <div className="max-w-5xl mx-auto pb-10">
+      {/* Enrollment success banner */}
+      {enrollSuccess && (
+        <div className="flex items-center gap-3 mb-6 rounded-xl border border-emerald-700/50 bg-emerald-950/60 px-5 py-4">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+          <div>
+            <p className="font-semibold text-emerald-300 text-sm">Enrollment successful!</p>
+            <p className="text-xs text-emerald-600 mt-0.5">You now have full access to all lessons in this course.</p>
+          </div>
+        </div>
+      )}
+
       {/* Back */}
       <Link
         href="/student/courses"

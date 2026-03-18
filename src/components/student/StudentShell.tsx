@@ -9,12 +9,12 @@ import {
   BookOpen,
   TrendingUp,
   ClipboardList,
-  Bell,
   LogOut,
   Menu,
   X,
   Music2,
 } from "lucide-react";
+import NotificationBell from "@/components/student/NotificationBell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -180,10 +180,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
             {/* Bell */}
-            <button className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 end-1.5 h-2 w-2 rounded-full bg-indigo-500 ring-2 ring-slate-900" />
-            </button>
+            <NotificationBell />
 
             {/* Identity */}
             <div className="hidden sm:flex flex-col items-end leading-none gap-1">

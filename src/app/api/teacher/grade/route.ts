@@ -5,14 +5,15 @@ import { sendGradeNotification } from "@/lib/email/resend";
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!session || !["teacher", "admin"].includes(session.user.user_metadata?.role || "")) {
-      // Need a rigid check on profiles table if metadata isn't reliable
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", session?.user.id).single();
-      if (!profile || !["teacher", "admin"].includes(profile.role)) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-      }
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (!profile || !["teacher", "admin"].includes(profile.role)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const body = await req.json();
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       .update({
         score: numericScore,
         feedback: feedback ? feedback.trim() : null,
-        graded_by: session!.user.id,
+        graded_by: user.id,
       })
       .eq("id", submissionId)
       .select(`

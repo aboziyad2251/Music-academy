@@ -5,8 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // POST /api/quiz/submit  — student submits quiz answers
 export async function POST(req: NextRequest) {
   const supabaseUser = createServerClient();
-  const { data: { session } } = await supabaseUser.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data: { user } } = await supabaseUser.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { quizId, answers } = await req.json();
   if (!quizId || !Array.isArray(answers)) {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     .from("quiz_submissions")
     .insert({
       quiz_id: quizId,
-      student_id: session.user.id,
+      student_id: user.id,
       answers,
       score,
       passed,
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
   // Send in-app notification to student
   await supabase.from("notifications").insert({
-    user_id: session.user.id,
+    user_id: user.id,
     message: passed
       ? `You passed "${quiz.title}" with ${score}%! 🎉`
       : `You scored ${score}% on "${quiz.title}". You need ${quiz.passing_score ?? 70}% to pass. Try again!`,

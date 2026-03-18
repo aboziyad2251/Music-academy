@@ -8,8 +8,8 @@ export async function GET(
   { params }: { params: { quizId: string } }
 ) {
   const supabaseUser = createServerClient();
-  const { data: { session } } = await supabaseUser.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data: { user } } = await supabaseUser.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const supabase = createAdminClient();
 
@@ -32,7 +32,7 @@ export async function GET(
     .from("quiz_submissions")
     .select("id, score, passed, answers, submitted_at")
     .eq("quiz_id", params.quizId)
-    .eq("student_id", session.user.id)
+    .eq("student_id", user.id)
     .order("submitted_at", { ascending: false })
     .limit(1)
     .maybeSingle();
