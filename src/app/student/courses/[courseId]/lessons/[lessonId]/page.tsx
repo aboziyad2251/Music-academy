@@ -213,15 +213,12 @@ export default function LessonDetailPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: updated,
-          context: {
-            lessonTitle: lesson?.title,
-            courseId: params.courseId,
-            lessonId: params.lessonId,
-          },
+          lesson_title: lesson?.title ?? "",
+          course_title: courseTitle,
         }),
       });
       const data = await res.json();
-      const reply = data.response ?? data.message ?? data.content ?? "Sorry, I couldn't process that.";
+      const reply = data.reply ?? data.response ?? data.message ?? data.content ?? "Sorry, I couldn't process that.";
       setChatMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch {
       setChatMessages((prev) => [
