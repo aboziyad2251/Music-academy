@@ -218,7 +218,7 @@ export default function LessonDetailPage({
         }),
       });
       const data = await res.json();
-      const reply = data.reply ?? data.response ?? data.message ?? data.content ?? data.error ?? "Sorry, I couldn't process that.";
+      const reply = data.reply ?? data.response ?? data.message ?? data.content ?? "AI tutor is temporarily unavailable. Please try again later.";
       setChatMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch {
       setChatMessages((prev) => [
