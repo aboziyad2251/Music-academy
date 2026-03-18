@@ -3,10 +3,10 @@ import TeacherDashboardClient from "./TeacherDashboardClient";
 
 export default async function TeacherDashboardPage() {
   const supabase = createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  const teacherId = session.user.id;
+  const teacherId = user.id;
 
   // Fetch teacher's courses
   const { data: courses } = await supabase
@@ -59,13 +59,11 @@ export default async function TeacherDashboardPage() {
     rosterEnrollments.map(async (e: any) => {
       const course = (courses ?? []).find((c: any) => c.id === e.course_id);
 
-      // Total lessons in course
       const { count: totalLessons } = await supabase
         .from("lessons")
         .select("id", { count: "exact", head: true })
         .eq("course_id", e.course_id);
 
-      // Completed lessons for this student in this course
       const lessonIds = totalLessons
         ? (await supabase.from("lessons").select("id").eq("course_id", e.course_id)).data?.map((l: any) => l.id) ?? []
         : [];
@@ -81,7 +79,6 @@ export default async function TeacherDashboardPage() {
 
       const progress = totalLessons ? Math.round(((completedLessons ?? 0) / totalLessons) * 100) : 0;
 
-      // Last active: most recent lesson_progress update
       const { data: lastActivity } = await supabase
         .from("lesson_progress")
         .select("updated_at")
@@ -112,6 +109,73 @@ export default async function TeacherDashboardPage() {
     })
   );
 
+  // Per-course analytics
+  const courseStats = await Promise.all(
+    (courses ?? []).map(async (course: any) => {
+      const courseEnrollments = (enrollments ?? []).filter((e: any) => e.course_id === course.id);
+      const enrollmentCount = courseEnrollments.length;
+      const revenue = enrollmentCount * (course.price ?? 0);
+
+      // Total lessons
+      const { data: lessonRows } = await supabase
+        .from("lessons")
+        .select("id")
+        .eq("course_id", course.id);
+      const lessonIds = (lessonRows ?? []).map((l: any) => l.id);
+      const totalLessons = lessonIds.length;
+
+      // Avg completion rate across enrolled students
+      let avgCompletion = 0;
+      if (enrollmentCount > 0 && totalLessons > 0) {
+        const completionRates = await Promise.all(
+          courseEnrollments.map(async (e: any) => {
+            const { count } = await supabase
+              .from("lesson_progress")
+              .select("id", { count: "exact", head: true })
+              .eq("student_id", e.student_id)
+              .eq("completed", true)
+              .in("lesson_id", lessonIds);
+            return Math.round(((count ?? 0) / totalLessons) * 100);
+          })
+        );
+        avgCompletion = Math.round(completionRates.reduce((a, b) => a + b, 0) / completionRates.length);
+      }
+
+      // Avg quiz score for this course
+      let avgQuizScore: number | null = null;
+      if (lessonIds.length > 0) {
+        const { data: quizzes } = await supabase
+          .from("quizzes")
+          .select("id")
+          .eq("course_id", course.id);
+        const quizIds = (quizzes ?? []).map((q: any) => q.id);
+        if (quizIds.length > 0) {
+          const { data: submissions } = await supabase
+            .from("quiz_submissions")
+            .select("score")
+            .in("quiz_id", quizIds)
+            .not("score", "is", null);
+          if (submissions && submissions.length > 0) {
+            avgQuizScore = Math.round(
+              submissions.reduce((a: number, s: any) => a + (s.score ?? 0), 0) / submissions.length
+            );
+          }
+        }
+      }
+
+      return {
+        id: course.id,
+        title: course.title,
+        status: course.status,
+        enrollmentCount,
+        revenue,
+        avgCompletion,
+        avgQuizScore,
+        totalLessons,
+      };
+    })
+  );
+
   return (
     <TeacherDashboardClient
       activeStudents={activeStudents}
@@ -119,6 +183,7 @@ export default async function TeacherDashboardPage() {
       pendingReviews={pendingReviews}
       totalEarnings={totalEarnings}
       roster={roster}
+      courseStats={courseStats}
     />
   );
 }

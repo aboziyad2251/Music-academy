@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import CourseReviews from "@/components/student/CourseReviews";
 import {
   Loader2,
   PlayCircle,
@@ -354,6 +355,9 @@ export default function CourseDetailPage({
               </div>
             </div>
           )}
+
+          {/* Reviews */}
+          <CourseReviews courseId={params.courseId} isEnrolled={isEnrolled} />
         </div>
 
         {/* ── Sticky Sidebar ── */}

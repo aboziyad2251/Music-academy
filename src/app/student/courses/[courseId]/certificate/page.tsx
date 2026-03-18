@@ -9,15 +9,15 @@ export default async function CertificatePage({
   params: { courseId: string };
 }) {
   const supabase = createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect("/login");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   // Verify enrollment
   const { data: enrollment } = await supabase
     .from("enrollments")
     .select("enrolled_at")
     .eq("course_id", params.courseId)
-    .eq("student_id", session.user.id)
+    .eq("student_id", user.id)
     .single();
 
   if (!enrollment) redirect(`/student/courses/${params.courseId}`);
@@ -41,7 +41,7 @@ export default async function CertificatePage({
   const { count: completedLessons } = await supabase
     .from("lesson_progress")
     .select("id", { count: "exact", head: true })
-    .eq("student_id", session.user.id)
+    .eq("student_id", user.id)
     .eq("completed", true)
     .in(
       "lesson_id",
@@ -62,14 +62,14 @@ export default async function CertificatePage({
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   // Completion date = latest lesson_progress updated_at
   const { data: lastProgress } = await supabase
     .from("lesson_progress")
     .select("updated_at")
-    .eq("student_id", session.user.id)
+    .eq("student_id", user.id)
     .eq("completed", true)
     .order("updated_at", { ascending: false })
     .limit(1)

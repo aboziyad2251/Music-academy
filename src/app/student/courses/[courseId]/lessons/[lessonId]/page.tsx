@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LessonPlayer from "@/components/student/LessonPlayer";
+import LessonNotes from "@/components/student/LessonNotes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -280,6 +281,9 @@ export default function LessonDetailPage({
           pdfUrl={lesson.pdf_url}
           isCompleted={progress?.completed}
         />
+
+        {/* Notes */}
+        <LessonNotes lessonId={params.lessonId} />
 
         {/* Prev / Next */}
         <div className="flex items-center justify-between pt-4 border-t border-slate-800">

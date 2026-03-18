@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Users, BookOpen, ClipboardCheck, DollarSign, PlusCircle, MessageCircle, X, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
+import { Users, BookOpen, ClipboardCheck, DollarSign, PlusCircle, MessageCircle, X, Loader2, Sparkles, CheckCircle2, TrendingUp, BarChart2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface StudentRow {
@@ -11,15 +11,27 @@ interface StudentRow {
   progress: number;
 }
 
+interface CourseStatRow {
+  id: string;
+  title: string;
+  status: string;
+  enrollmentCount: number;
+  revenue: number;
+  avgCompletion: number;
+  avgQuizScore: number | null;
+  totalLessons: number;
+}
+
 interface Props {
   activeStudents: number;
   publishedCourses: number;
   pendingReviews: number;
   totalEarnings: number;
   roster: StudentRow[];
+  courseStats: CourseStatRow[];
 }
 
-export default function TeacherDashboardClient({ activeStudents, publishedCourses, pendingReviews, totalEarnings, roster }: Props) {
+export default function TeacherDashboardClient({ activeStudents, publishedCourses, pendingReviews, totalEarnings, roster, courseStats }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [topicInput, setTopicInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -191,6 +203,79 @@ export default function TeacherDashboardClient({ activeStudents, publishedCourse
           </table>
         </div>
       </div>
+
+      {/* COURSE PERFORMANCE TABLE */}
+      {courseStats.length > 0 && (
+        <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] rounded-2xl overflow-hidden shadow-lg">
+          <div className="p-6 border-b border-[var(--dark-3)]">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <BarChart2 className="w-5 h-5 text-[var(--gold)]" />
+              أداء الدورات
+            </h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-[var(--cream)]/80">
+              <thead className="bg-[var(--dark)]/50 text-sm font-sans tracking-wide">
+                <tr>
+                  <th className="px-6 py-4 font-semibold">الدورة</th>
+                  <th className="px-6 py-4 font-semibold text-center">الطلاب</th>
+                  <th className="px-6 py-4 font-semibold text-center">الإيرادات</th>
+                  <th className="px-6 py-4 font-semibold text-center">متوسط الإتمام</th>
+                  <th className="px-6 py-4 font-semibold text-center">متوسط الاختبارات</th>
+                  <th className="px-6 py-4 font-semibold text-center">الحالة</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--dark-3)]">
+                {courseStats.map((c) => (
+                  <tr key={c.id} className="hover:bg-[var(--dark-3)]/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-white">{c.title}</p>
+                      <p className="text-xs text-slate-500 font-sans mt-0.5">{c.totalLessons} درس</p>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="text-2xl font-bold text-indigo-300">{c.enrollmentCount}</span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="text-lg font-bold text-teal-300">${c.revenue.toLocaleString()}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-24 h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-l from-[var(--teal)] to-[var(--gold)]"
+                            style={{ width: `${c.avgCompletion}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-sans font-bold text-slate-300">{c.avgCompletion}%</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {c.avgQuizScore !== null ? (
+                        <span className={`text-lg font-bold ${c.avgQuizScore >= 70 ? "text-emerald-400" : "text-amber-400"}`}>
+                          {c.avgQuizScore}%
+                        </span>
+                      ) : (
+                        <span className="text-slate-600 text-sm font-sans">لا يوجد</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-sans ${
+                        c.status === "published"
+                          ? "bg-emerald-900/60 text-emerald-300"
+                          : c.status === "pending_review"
+                          ? "bg-amber-900/60 text-amber-300"
+                          : "bg-slate-800 text-slate-400"
+                      }`}>
+                        {c.status === "published" ? "منشور" : c.status === "pending_review" ? "قيد المراجعة" : "مسودة"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* AI COURSE CREATION MODAL */}
       {isModalOpen && (

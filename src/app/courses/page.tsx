@@ -12,15 +12,23 @@ export default async function PublicCoursesPage() {
 
   const { data: courses } = await supabase
     .from("courses")
-    .select("id, title, description, thumbnail_url, price, category, level, teacher_id, profiles:teacher_id(full_name), enrollments(id)")
+    .select("id, title, description, thumbnail_url, price, category, level, teacher_id, profiles:teacher_id(full_name), enrollments(id), course_reviews(rating)")
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
-  const enriched = (courses || []).map((c: any) => ({
-    ...c,
-    teacherName: c.profiles?.full_name ?? "Instructor",
-    enrollmentCount: c.enrollments?.length ?? 0,
-  }));
+  const enriched = (courses || []).map((c: any) => {
+    const ratings: number[] = (c.course_reviews ?? []).map((r: any) => r.rating);
+    const avgRating = ratings.length
+      ? Math.round((ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) * 10) / 10
+      : null;
+    return {
+      ...c,
+      teacherName: c.profiles?.full_name ?? "Instructor",
+      enrollmentCount: c.enrollments?.length ?? 0,
+      avgRating,
+      totalReviews: ratings.length,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -137,8 +145,15 @@ function CourseCard({ course }: { course: any }) {
         <div className="mt-auto space-y-3">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span className="flex items-center gap-1">
-              <Star className="h-3.5 w-3.5 text-amber-400" />
-              {course.teacherName}
+              <Star className={`h-3.5 w-3.5 ${course.avgRating ? "text-amber-400 fill-amber-400" : "text-slate-600"}`} />
+              {course.avgRating ? (
+                <span className="font-semibold text-amber-400">{course.avgRating}</span>
+              ) : (
+                <span>No reviews yet</span>
+              )}
+              {course.totalReviews > 0 && (
+                <span className="text-slate-600">({course.totalReviews})</span>
+              )}
             </span>
             <span className="flex items-center gap-1">
               <Users className="h-3.5 w-3.5" />
