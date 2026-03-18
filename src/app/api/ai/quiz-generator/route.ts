@@ -3,7 +3,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,7 +72,7 @@ Ensure the options are the actual maqam names in Arabic. Keep it strict JSON.`;
         context: 'ear_training_quiz',
         prompt: `Generate ${level} quiz`,
         response: 'JSON array generated successfully',
-        model_used: 'gemini-2.0-flash'
+        model_used: 'gemini-1.5-flash'
     }).then(({ error }) => {
         if (error) console.error("Error logging AI interaction:", error);
     });

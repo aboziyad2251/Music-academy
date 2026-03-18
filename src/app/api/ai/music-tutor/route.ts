@@ -5,7 +5,7 @@ import { checkHourlyRateLimit } from "@/lib/rate-limit";
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Assuming a generic latest pro specifier, fallback to 2.0 or 1.5 if needed
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Assuming a generic latest pro specifier, fallback to 2.0 or 1.5 if needed
 
 const SYSTEM_PROMPT = `
 You are an expert Arabic music theory tutor for Academy of the Maqam (أكاديمية المقام).
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
         context: context,
         prompt: message,
         response: parsedResponse.response,
-        model_used: 'gemini-2.0-flash'
+        model_used: 'gemini-1.5-flash'
     }).then(({ error }) => {
         if (error) console.error("Error logging AI interaction:", error);
     });

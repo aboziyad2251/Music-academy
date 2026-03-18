@@ -59,7 +59,7 @@ Return a JSON object with EXACTLY this structure — no extra fields. Return ONL
 CRITICAL: Return ONLY valid JSON. No markdown code blocks. No explanation before or after. Pure JSON only. Lessons array must have exactly ${num_lessons || 5} items. Position numbers must be sequential starting from 1.`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
