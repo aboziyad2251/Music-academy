@@ -38,8 +38,8 @@ export async function middleware(req: NextRequest) {
 
   const pathname = req.nextUrl.pathname;
 
-  // Public routes (API Auth, Stripe Webhooks, etc)
-  if (pathname.startsWith("/api/stripe") || pathname.startsWith("/api/auth")) {
+  // Public routes
+  if (pathname.startsWith("/api/auth")) {
     return res;
   }
 

@@ -13,37 +13,14 @@ export default function PricingPage() {
 
   const handleSubscribe = async (planId: string) => {
     setLoading(planId);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-         toast.error("الرجاء تسجيل الدخول أولاً للمتابعة.");
-         // Note: We don't have a rigid login redirect path structure known yet, 
-         // assuming a basic route strategy or they can naturally browse while logged in.
-         return;
-      }
-
-      if (planId === 'free') {
-          router.push('/student/dashboard');
-          return;
-      }
-
-      const res = await fetch("/api/payments/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId })
-      });
-      
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error(data.error || "Failed to create checkout");
-      }
-    } catch (e: any) {
-      toast.error("حدث خطأ أثناء الاتصال ببوابة الدفع. يُرجى المحاولة لاحقاً.");
-    } finally {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("الرجاء تسجيل الدخول أولاً للمتابعة.");
       setLoading(null);
+      return;
     }
+    router.push("/student/courses");
+    setLoading(null);
   };
 
   return (

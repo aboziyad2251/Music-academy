@@ -30,7 +30,9 @@
       "Bash(ssh -o StrictHostKeyChecking=no -o BatchMode=yes -i ~/.ssh/id_ed25519 root@76.13.40.119 \"echo connected\")",
       "Bash(ssh-keygen -y -f ~/.ssh/id_ed25519)",
       "Bash(grep -r lessons 'c:\\\\Users\\\\moham\\\\Desktop\\\\Muisc acadmey\\\\src\\\\app\\\\api' --include=*.ts)",
-      "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 root@76.13.40.119 \"echo connected\")"
+      "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 root@76.13.40.119 \"echo connected\")",
+      "Bash(grep -rn \"gemini-2.0-flash\" \"c:\\\\Users\\\\moham\\\\Desktop\\\\Muisc acadmey\\\\src\\\\app\\\\api\\\\ai\"\" --include=\"*.ts \" -l)",
+      "Bash(\"c:\\\\Users\\\\moham\\\\Desktop\\\\Muisc acadmey\\\\src\\\\app\\\\api\\\\admin\\\\enroll\\\\route.ts\")"
     ]
   }
 }

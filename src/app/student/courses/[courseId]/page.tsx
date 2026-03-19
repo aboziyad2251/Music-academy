@@ -21,7 +21,7 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export default function CourseDetailPage({
@@ -39,20 +39,7 @@ export default function CourseDetailPage({
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [enrollmentCount, setEnrollmentCount] = useState<number | null>(null);
-  const [enrollSuccess, setEnrollSuccess] = useState(false);
-
   const supabase = createClient();
-
-  // Show success banner when returning from Stripe checkout
-  useEffect(() => {
-    if (searchParams.get("enrolled") === "true") {
-      setEnrollSuccess(true);
-      setIsEnrolled(true); // Optimistic: webhook may not have fired yet
-      toast.success("You're enrolled! Welcome to the course.");
-      // Clean up the URL param without triggering a refetch
-      router.replace(`/student/courses/${params.courseId}`);
-    }
-  }, [searchParams, params.courseId, router]);
 
   useEffect(() => {
     async function fetchCourseDetails() {
@@ -120,20 +107,21 @@ export default function CourseDetailPage({
   const handleEnroll = async () => {
     setCheckoutLoading(true);
     try {
-      const res = await fetch("/api/stripe/checkout", {
+      const res = await fetch("/api/student/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ courseId: params.courseId }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.enrolled) {
+        setIsEnrolled(true);
+        toast.success("You're enrolled! Welcome to the course.");
       } else {
-        toast.error(data.error || "Could not start checkout. Please try again.");
-        setCheckoutLoading(false);
+        toast.error(data.error || "Could not enroll. Please try again.");
       }
     } catch {
       toast.error("Network error. Please try again.");
+    } finally {
       setCheckoutLoading(false);
     }
   };
