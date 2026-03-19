@@ -31,6 +31,7 @@ export default function StudentDashboard() {
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [course, setCourse] = useState<ActiveCourseData | null>(null);
   const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -62,6 +63,8 @@ export default function StudentDashboard() {
         if (enrolledRes.ok) setEnrolledCourses(await enrolledRes.json());
       } catch (e) {
         console.error("Error fetching data", e);
+      } finally {
+        setLoaded(true);
       }
     };
 
@@ -69,7 +72,7 @@ export default function StudentDashboard() {
     fetchMockData();
   }, [supabase]);
 
-  if (!progress || !course) {
+  if (!loaded || !progress) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="flex gap-2">
@@ -77,6 +80,26 @@ export default function StudentDashboard() {
           <div className="w-3 h-3 rounded-full bg-[var(--gold)] animate-bounce delay-100" />
           <div className="w-3 h-3 rounded-full bg-[var(--gold)] animate-bounce delay-200" />
         </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center" dir="rtl">
+        <div className="h-20 w-20 rounded-full bg-[var(--dark-2)] border-2 border-[var(--gold)]/20 flex items-center justify-center">
+          <PlayCircle className="h-10 w-10 text-[var(--gold)]/50" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-white">مرحباً، {userName}!</h2>
+          <p className="text-slate-400">لم تنضم إلى أي دورة بعد. ابدأ رحلتك الموسيقية الآن.</p>
+        </div>
+        <Link
+          href="/student/courses"
+          className="bg-[var(--gold)] hover:bg-[var(--gold-light)] text-[var(--dark)] font-bold py-3 px-8 rounded-xl transition-transform hover:scale-105 shadow-[0_4px_20px_rgba(212,160,23,0.3)]"
+        >
+          استعرض الدورات
+        </Link>
       </div>
     );
   }

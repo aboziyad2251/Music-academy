@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { Award, CheckCircle2, Star, Music } from "lucide-react";
 import Link from "next/link";
+import PrintButton from "@/components/student/PrintButton";
 
 export default async function CertificatePage({
   params,
@@ -182,10 +183,13 @@ export default async function CertificatePage({
         </div>
       </div>
 
-      {/* Print hint */}
-      <p className="mt-6 text-xs text-slate-600">
-        Use your browser&apos;s print function (Ctrl+P) to save as PDF
-      </p>
+      {/* Actions */}
+      <div className="mt-6 flex flex-col items-center gap-3 print:hidden">
+        <PrintButton />
+        <p className="text-xs text-slate-600">
+          Opens your browser&apos;s print dialog — choose &quot;Save as PDF&quot; as the destination
+        </p>
+      </div>
     </div>
   );
 }

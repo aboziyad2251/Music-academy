@@ -66,6 +66,37 @@ export async function sendGradeNotification(
   }
 }
 
+export async function sendEnrollmentEmail(
+  studentEmail: string,
+  studentName: string,
+  courseTitle: string,
+  courseLink: string
+) {
+  if (!resend) return { success: true, simulated: true };
+
+  try {
+    const data = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [studentEmail],
+      subject: `You're enrolled in "${courseTitle}" 🎶`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>You're in, ${studentName}!</h2>
+          <p>You've been successfully enrolled in <strong>${courseTitle}</strong>.</p>
+          <p>Head over to your course and start learning at your own pace.</p>
+          <a href="${courseLink}" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 16px;">Go to Course</a>
+          <br/><br/>
+          <p>Happy learning,<br/>The Music Academy Team</p>
+        </div>
+      `,
+    });
+    return { success: true, data };
+  } catch (error) {
+    console.error("Failed to send enrollment email:", error);
+    return { success: false, error };
+  }
+}
+
 export async function sendAssignmentReminder(
   studentEmail: string,
   assignmentTitle: string,

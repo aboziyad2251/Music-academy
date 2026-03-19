@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, PlayCircle } from "lucide-react";
@@ -43,7 +43,13 @@ export default function LessonPlayer({
   const [completed, setCompleted] = useState(isCompleted);
   const [loading, setLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const completedRef = useRef(isCompleted);
   const supabase = createClient();
+
+  useEffect(() => {
+    completedRef.current = completed;
+  }, [completed]);
 
   const checkCourseCompletion = async () => {
     // Count total lessons in course
@@ -86,7 +92,7 @@ export default function LessonPlayer({
         .upsert({
           student_id: studentId,
           lesson_id: lessonId,
-          completed: markedComplete || completed,
+          completed: markedComplete || completedRef.current,
           watch_pct: parseInt(pct.toFixed(0)),
           updated_at: new Date().toISOString(),
         }, { onConflict: 'student_id, lesson_id' });
@@ -99,36 +105,78 @@ export default function LessonPlayer({
     }
   };
 
+  const handleAutoComplete = async () => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    setCompleted(true);
+    await handleProgressUpsert(100, true);
+    await checkCourseCompletion();
+  };
+
   const handleTimeUpdate = async () => {
-    if (!videoRef.current || completed) return;
-    
+    if (!videoRef.current || completedRef.current) return;
     const current = videoRef.current.currentTime;
     const duration = videoRef.current.duration;
-    
-    if (duration > 0) {
-      const percentage = (current / duration) * 100;
-      
-      // Auto-complete at 80% mark natively to ensure progress is caught even if they don't click the explicit button
-      if (percentage >= 80 && !completed) {
-        setCompleted(true);
-        await handleProgressUpsert(percentage, true);
-        await checkCourseCompletion();
-      }
+    if (duration > 0 && (current / duration) * 100 >= 80) {
+      await handleAutoComplete();
     }
   };
 
   const markComplete = async () => {
     setLoading(true);
-    setCompleted(true);
-    
-    const currentPct = videoRef.current && videoRef.current.duration > 0 
-      ? (videoRef.current.currentTime / videoRef.current.duration) * 100 
-      : 100;
-
-    await handleProgressUpsert(currentPct, true);
-    await checkCourseCompletion();
+    await handleAutoComplete();
     setLoading(false);
   };
+
+  // Auto-complete for YouTube and Vimeo embeds
+  useEffect(() => {
+    if (!videoUrl || completedRef.current) return;
+    const meta = getEmbedUrl(videoUrl);
+    if (meta.type === "file") return;
+
+    if (meta.type === "youtube") {
+      const initYT = () => {
+        if (!iframeRef.current) return;
+        new (window as any).YT.Player(iframeRef.current, {
+          events: {
+            onStateChange: (event: any) => {
+              if (event.data === 0) handleAutoComplete(); // 0 = ended
+            },
+          },
+        });
+      };
+
+      if ((window as any).YT?.Player) {
+        initYT();
+      } else {
+        const prev = (window as any).onYouTubeIframeAPIReady;
+        (window as any).onYouTubeIframeAPIReady = () => { prev?.(); initYT(); };
+        if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+          const script = document.createElement("script");
+          script.src = "https://www.youtube.com/iframe_api";
+          document.head.appendChild(script);
+        }
+      }
+    }
+
+    if (meta.type === "vimeo") {
+      const initVimeo = () => {
+        if (!iframeRef.current) return;
+        const player = new (window as any).Vimeo.Player(iframeRef.current);
+        player.on("ended", () => handleAutoComplete());
+      };
+
+      if ((window as any).Vimeo?.Player) {
+        initVimeo();
+      } else if (!document.querySelector('script[src*="player.vimeo.com/api"]')) {
+        const script = document.createElement("script");
+        script.src = "https://player.vimeo.com/api/player.js";
+        script.onload = initVimeo;
+        document.head.appendChild(script);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoUrl]);
 
   const videoMeta = videoUrl ? getEmbedUrl(videoUrl) : null;
 
@@ -149,6 +197,7 @@ export default function LessonPlayer({
             />
           ) : (
             <iframe
+              ref={iframeRef}
               src={videoMeta.embedUrl}
               className="h-full w-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

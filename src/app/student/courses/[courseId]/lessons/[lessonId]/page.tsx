@@ -22,6 +22,9 @@ import {
   Sparkles,
   X,
   Bot,
+  ListVideo,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 import SubmissionForm from "@/components/student/SubmissionForm";
 
@@ -51,6 +54,9 @@ export default function LessonDetailPage({
   const [loading, setLoading] = useState(true);
   const [studentId, setStudentId] = useState<string>("");
   const [isPosting, setIsPosting] = useState(false);
+  const [allLessons, setAllLessons] = useState<any[]>([]);
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [navOpen, setNavOpen] = useState(false);
 
   // AI Chat state
   const [chatOpen, setChatOpen] = useState(false);
@@ -104,18 +110,29 @@ export default function LessonDetailPage({
 
         setProgress(progressData);
 
-        const { data: allLessons } = await supabase
+        const { data: allLessonsData } = await supabase
           .from("lessons")
-          .select("id, position")
+          .select("id, position, title")
           .eq("course_id", params.courseId)
           .order("position", { ascending: true });
 
-        if (allLessons) {
-          const currentIndex = allLessons.findIndex((l: any) => l.id === params.lessonId);
+        if (allLessonsData) {
+          const currentIndex = allLessonsData.findIndex((l: any) => l.id === params.lessonId);
           setSiblings({
-            prev: currentIndex > 0 ? allLessons[currentIndex - 1] : null,
-            next: currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null,
+            prev: currentIndex > 0 ? allLessonsData[currentIndex - 1] : null,
+            next: currentIndex < allLessonsData.length - 1 ? allLessonsData[currentIndex + 1] : null,
           });
+          setAllLessons(allLessonsData);
+
+          // Load completion status for all lessons
+          const { data: progressRows } = await supabase
+            .from("lesson_progress")
+            .select("lesson_id")
+            .eq("student_id", session.user.id)
+            .eq("completed", true)
+            .in("lesson_id", allLessonsData.map((l: any) => l.id));
+
+          setCompletedIds(new Set((progressRows ?? []).map((r: any) => r.lesson_id)));
         }
       }
 
@@ -247,13 +264,25 @@ export default function LessonDetailPage({
   return (
     <>
       <div className="mx-auto max-w-4xl space-y-8 pb-24">
-        {/* Back */}
-        <Link
-          href={`/student/courses/${params.courseId}`}
-          className="inline-flex items-center text-sm text-slate-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="me-2 h-4 w-4" /> Back to Syllabus
-        </Link>
+        {/* Back + Lesson navigator toggle */}
+        <div className="flex items-center justify-between">
+          <Link
+            href={`/student/courses/${params.courseId}`}
+            className="inline-flex items-center text-sm text-slate-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="me-2 h-4 w-4" /> Back to Syllabus
+          </Link>
+          <button
+            onClick={() => setNavOpen(true)}
+            className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+          >
+            <ListVideo className="h-4 w-4" />
+            <span className="hidden sm:inline">Lessons</span>
+            <span className="text-xs text-slate-600">
+              ({completedIds.size}/{allLessons.length})
+            </span>
+          </button>
+        </div>
 
         {/* Title */}
         <div className="space-y-3">
@@ -634,6 +663,78 @@ export default function LessonDetailPage({
         <div
           className="fixed inset-0 bg-black/50 z-40 sm:hidden"
           onClick={() => setChatOpen(false)}
+        />
+      )}
+
+      {/* ── Lesson Navigator Panel ── */}
+      <div
+        className={`fixed top-0 start-0 bottom-0 z-50 w-full sm:w-80 bg-slate-950 border-e border-slate-800 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
+          navOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-900 flex-shrink-0">
+          <div>
+            <p className="font-semibold text-white text-sm truncate">{courseTitle}</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {completedIds.size} / {allLessons.length} completed
+            </p>
+          </div>
+          <button
+            onClick={() => setNavOpen(false)}
+            className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors flex-shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="h-1 bg-slate-800 flex-shrink-0">
+          <div
+            className="h-full bg-indigo-500 transition-all duration-500"
+            style={{ width: `${allLessons.length > 0 ? (completedIds.size / allLessons.length) * 100 : 0}%` }}
+          />
+        </div>
+
+        {/* Lesson list */}
+        <div className="flex-1 overflow-y-auto py-2">
+          {allLessons.map((l: any) => {
+            const isCurrent = l.id === params.lessonId;
+            const isDone = completedIds.has(l.id);
+            return (
+              <Link
+                key={l.id}
+                href={`/student/courses/${params.courseId}/lessons/${l.id}`}
+                onClick={() => setNavOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 transition-colors group ${
+                  isCurrent
+                    ? "bg-indigo-950/60 border-s-2 border-indigo-500"
+                    : "hover:bg-slate-800/50 border-s-2 border-transparent"
+                }`}
+              >
+                {isDone ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                ) : (
+                  <Circle className={`h-4 w-4 flex-shrink-0 ${isCurrent ? "text-indigo-400" : "text-slate-600"}`} />
+                )}
+                <div className="min-w-0">
+                  <p className={`text-xs font-medium leading-snug truncate ${
+                    isCurrent ? "text-indigo-200" : isDone ? "text-slate-400" : "text-slate-300"
+                  }`}>
+                    {l.position}. {l.title}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Backdrop for lesson nav on mobile */}
+      {navOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 sm:hidden"
+          onClick={() => setNavOpen(false)}
         />
       )}
     </>

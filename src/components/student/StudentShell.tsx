@@ -6,13 +6,13 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Library,
-  BookOpen,
   TrendingUp,
   ClipboardList,
   LogOut,
   Menu,
   X,
   Music2,
+  UserCircle,
 } from "lucide-react";
 import NotificationBell from "@/components/student/NotificationBell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,6 +43,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
     { href: "/student/courses", label: t.nav.courses, icon: Library },
     { href: "/student/progress", label: t.nav.analytics, icon: TrendingUp },
     { href: "/student/assignments", label: t.nav.assignments, icon: ClipboardList },
+    { href: "/student/profile", label: "Profile", icon: UserCircle },
   ];
 
   const initials = user.full_name
@@ -108,7 +109,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
         <svg viewBox="0 0 50 50" className="absolute bottom-0 end-0 w-32 h-32 opacity-[0.06] pointer-events-none fill-[var(--gold)]">
           <polygon points="25,3 28,19 44,19 31,29 36,45 25,36 14,45 19,29 6,19 22,19" />
         </svg>
-        <div className="flex items-center gap-3 px-3 py-2 rounded-lg">
+        <Link href="/student/profile" onClick={onLinkClick} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-colors group">
           <Avatar className="h-8 w-8 border border-slate-700 flex-shrink-0">
             <AvatarImage src={user.avatar_url ?? ""} />
             <AvatarFallback className="bg-indigo-900 text-indigo-200 text-xs font-semibold">
@@ -116,10 +117,10 @@ export default function StudentShell({ user, children }: StudentShellProps) {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">{user.full_name}</p>
+            <p className="text-sm font-semibold text-white truncate group-hover:text-indigo-300 transition-colors">{user.full_name}</p>
             <p className="text-[11px] text-slate-500 truncate capitalize">{t.roles.student}</p>
           </div>
-        </div>
+        </Link>
         <button
           onClick={handleSignOut}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-950/40 transition-all flex-no-flip"
@@ -182,19 +183,21 @@ export default function StudentShell({ user, children }: StudentShellProps) {
             {/* Bell */}
             <NotificationBell />
 
-            {/* Identity */}
-            <div className="hidden sm:flex flex-col items-end leading-none gap-1">
+            {/* Identity — links to profile */}
+            <Link href="/student/profile" className="hidden sm:flex flex-col items-end leading-none gap-1 hover:opacity-80 transition-opacity">
               <span className="text-sm font-semibold text-white">{user.full_name}</span>
               <Badge className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] h-4 px-1.5 rounded-sm">
                 {t.roles.student}
               </Badge>
-            </div>
-            <Avatar className="h-8 w-8 border-2 border-indigo-500/40">
-              <AvatarImage src={user.avatar_url ?? ""} />
-              <AvatarFallback className="bg-indigo-900 text-indigo-200 text-xs font-semibold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            </Link>
+            <Link href="/student/profile">
+              <Avatar className="h-8 w-8 border-2 border-indigo-500/40 hover:border-indigo-400 transition-colors cursor-pointer">
+                <AvatarImage src={user.avatar_url ?? ""} />
+                <AvatarFallback className="bg-indigo-900 text-indigo-200 text-xs font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
           </div>
         </header>
 
