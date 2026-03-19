@@ -153,17 +153,6 @@ export default function CourseDetailPage({
 
   return (
     <div className="max-w-5xl mx-auto pb-10">
-      {/* Enrollment success banner */}
-      {enrollSuccess && (
-        <div className="flex items-center gap-3 mb-6 rounded-xl border border-emerald-700/50 bg-emerald-950/60 px-5 py-4">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
-          <div>
-            <p className="font-semibold text-emerald-300 text-sm">Enrollment successful!</p>
-            <p className="text-xs text-emerald-600 mt-0.5">You now have full access to all lessons in this course.</p>
-          </div>
-        </div>
-      )}
-
       {/* Back */}
       <Link
         href="/student/courses"
