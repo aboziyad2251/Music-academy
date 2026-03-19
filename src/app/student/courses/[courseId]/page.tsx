@@ -30,7 +30,6 @@ export default function CourseDetailPage({
   params: { courseId: string };
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
