@@ -24,20 +24,14 @@ export async function POST(req: NextRequest) {
       student_name,
     } = body;
 
-    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "No AI API key configured" }, { status: 500 });
+      return NextResponse.json({ error: "No DeepSeek API key configured" }, { status: 500 });
     }
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: "Messages array is required" }, { status: 400 });
     }
-
-    // Convert standard { role, content } format to Gemini's format if needed
-    const geminiMessages = messages.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : msg.role,
-      parts: [{ text: msg.content || msg.parts?.[0]?.text || "" }]
-    }));
 
     const systemPrompt = `You are a friendly, expert music tutor assistant embedded inside a lesson on the Music Online Academy learning platform.
 
@@ -70,31 +64,42 @@ COMMUNICATION RULES:
 - Respond in the same language the student writes in (Arabic or English)
 - Use the student's first name occasionally to make it feel personal`;
 
+    const chatMessages = [
+      { role: "system", content: systemPrompt },
+      ...messages.map(msg => ({
+        role: msg.role === 'model' || msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content || msg.parts?.[0]?.text || ""
+      }))
+    ];
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      "https://api.deepseek.com/chat/completions",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
         body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
-          },
-          contents: geminiMessages,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 800 },
+          model: "deepseek-chat",
+          messages: chatMessages,
+          temperature: 0.7,
+          max_tokens: 800,
         }),
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini API Error:", errorText);
-      let geminiError = "AI service temporarily unavailable";
-      try { geminiError = JSON.parse(errorText)?.error?.message ?? geminiError; } catch {}
-      return NextResponse.json({ error: geminiError }, { status: 500 });
+      console.error("DeepSeek API Error:", errorText);
+      let glmError = "AI service temporarily unavailable";
+      try { glmError = JSON.parse(errorText)?.error?.message ?? glmError; } catch {}
+      return NextResponse.json({ error: glmError }, { status: 500 });
     }
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    console.log("GLM Full Response Data:", JSON.stringify(data, null, 2));
+    const text = data.choices?.[0]?.message?.content || "";
 
     return NextResponse.json({ reply: text });
   } catch (err: any) {

@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
       special_topics 
     } = body;
 
-    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "No AI API key configured" }, { status: 500 });
+      return NextResponse.json({ error: "No DeepSeek API key configured" }, { status: 500 });
     }
 
     const prompt = `Generate a complete course curriculum for the following music course.
@@ -39,7 +39,7 @@ Total Number of Lessons: ${num_lessons || 5}
 Teacher's Goals for Students: ${teacher_goals || 'Not specified'}
 Special Topics to Cover: ${special_topics || 'None'}
 
-Return a JSON object with EXACTLY this structure — no extra fields. Return ONLY valid JSON, do NOT wrap it in markdown block quotes (\`\`\`json):
+Return a JSON object with EXACTLY this structure — no extra fields. Respond ONLY with valid JSON:
 {
   "course_summary": "string - 2 to 3 sentence overview of the course",
   "learning_outcomes": ["string", "string", "string"],
@@ -56,16 +56,23 @@ Return a JSON object with EXACTLY this structure — no extra fields. Return ONL
   ]
 }
 
-CRITICAL: Return ONLY valid JSON. No markdown code blocks. No explanation before or after. Pure JSON only. Lessons array must have exactly ${num_lessons || 5} items. Position numbers must be sequential starting from 1.`;
+CRITICAL: Return ONLY valid JSON. Lessons array must have exactly ${num_lessons || 5} items. Position numbers must be sequential starting from 1.`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      "https://api.deepseek.com/chat/completions",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+          model: "deepseek-chat",
+          messages: [
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 2048,
         }),
       }
     );
@@ -75,7 +82,7 @@ CRITICAL: Return ONLY valid JSON. No markdown code blocks. No explanation before
     }
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const text = data.choices?.[0]?.message?.content || "";
 
     try {
       // Clean up markdown fences just in case the model ignores the instruction

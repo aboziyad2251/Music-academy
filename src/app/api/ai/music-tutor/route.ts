@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { checkHourlyRateLimit } from "@/lib/rate-limit";
-
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Assuming a generic latest pro specifier, fallback to 2.0 or 1.5 if needed
 
 const SYSTEM_PROMPT = `
 You are an expert Arabic music theory tutor for Academy of the Maqam (أكاديمية المقام).
@@ -58,62 +53,77 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    if (!process.env.GOOGLE_AI_API_KEY) {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
       return NextResponse.json(
         { error: "لم يتم إعداد مفتاح API بشكل صحيح.", response: "عذراً، خدمة المعلم الذكي غير متوفرة حالياً.", suggestions: [] },
         { status: 503 }
       );
     }
 
-    // Call Gemini API
-    const result = await model.generateContent({
-        contents: [
-            { role: "user", parts: [{ text: `System Context: Language preference is ${language || "ar"}. Topic Context: ${context || "general"}.\n\nStudent Message: ${message}` }] }
-        ],
-        systemInstruction: {
-          role: "system",
-          parts: [{ text: SYSTEM_PROMPT }]
+    // Call GLM API
+    const response = await fetch(
+      "https://api.deepseek.com/chat/completions",
+      {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
         },
-        generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1000,
-        }
-    });
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: `System Context: Language preference is ${language || "ar"}. Topic Context: ${context || "general"}.\n\nStudent Message: ${message}` }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000,
+        }),
+      }
+    );
 
-    const responseText = result.response.text();
-    let parsedResponse;
-
-    try {
-        // Handle potential markdown formatting from the API
-        const cleanedText = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-        parsedResponse = JSON.parse(cleanedText);
-    } catch (parseError) {
-        console.error("Failed to parse Gemini JSON:", responseText);
-        return NextResponse.json(
-            { error: "حدث خطأ في قراءة رد الذكاء الاصطناعي.", response: "عذراً، لم أتمكن من صياغة الإجابة بالشكل المطلوب. حاول صياغة سؤالك بطريقة أخرى.", suggestions: [] },
-            { status: 500 }
-        );
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("DeepSeek API Error:", errorText);
+      return NextResponse.json(
+        { error: "حدث خطأ في خدمة الذكاء الاصطناعي.", response: "عذراً، خدمة المعلم الذكي غير متوفرة حالياً.", suggestions: [] },
+        { status: 500 }
+      );
     }
 
-    // Async logging to database for Admin Analytics without blocking the response
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content || "";
+    
+    let parsed: any = {};
+    try {
+        const cleanedText = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        parsed = JSON.parse(cleanedText);
+    } catch (parseError) {
+        console.error("Failed to parse GLM JSON:", text);
+        parsed = { response: text, suggestions: [] };
+    }
+
+    // Async logging to database for Admin Analytics
     supabase.from('ai_interactions').insert({
         user_id: user.id,
         endpoint: '/api/ai/music-tutor',
-        language: language,
-        context: context,
-        prompt: message,
-        response: parsedResponse.response,
-        model_used: 'gemini-1.5-flash'
+        context: context || 'general',
+        prompt: `Language: ${language}, Message: ${message}`,
+        response: text,
+        model_used: 'deepseek-chat'
     }).then(({ error }) => {
         if (error) console.error("Error logging AI interaction:", error);
     });
 
-    return NextResponse.json(parsedResponse);
+    return NextResponse.json({
+        response: parsed.response || text,
+        suggestions: parsed.suggestions || []
+    });
     
   } catch (err: any) {
     console.error("AI Tutor Route Error:", err.message || err);
     
-    // Fallback Mocked Response to handle missing/invalid API keys during testing
+    // Fallback Mocked Response
     return NextResponse.json(
       { 
         response: "مرحباً يا صديقي! أرى أنك تسأل عن المقامات الموسيقية. مقام الراست هو من أشهر المقامات العربية، ويتميز بطابعه الأصيل والفخم. هل تود أن أعزف لك مثالاً أو أشرح لك أبعاده الموسيقية؟ (ملاحظة: هذا رد تجريبي نظراً لعدم إعداد مفتاح API بشكل كامل).", 

@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,7 +23,8 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    if (!process.env.GOOGLE_AI_API_KEY) {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
       return NextResponse.json(
         { error: "API key is missing." },
         { status: 503 }
@@ -44,26 +41,46 @@ Output format (JSON):
   "content_sections": [{"heading": "string", "body": "string"}],
   "practice_exercises": ["string"], 
   "estimated_duration_minutes": number 
-}`;
+}
+Respond ONLY with the JSON object.`;
 
-    const result = await model.generateContent({
-        contents: [
-            { role: "user", parts: [{ text: promptText }] }
-        ],
-        generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2000,
-        }
-    });
+    const response = await fetch(
+      "https://api.deepseek.com/chat/completions",
+      {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            { role: "user", content: promptText }
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+        }),
+      }
+    );
 
-    const responseText = result.response.text();
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("DeepSeek API Error:", errorText);
+      return NextResponse.json(
+        { error: "فشل في التواصل مع خدمة الذكاء الاصطناعي." },
+        { status: 500 }
+      );
+    }
+
+    const data = await response.json();
+    const responseText = data.choices?.[0]?.message?.content || "";
     let parsedResponse;
 
     try {
         const cleanedText = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
         parsedResponse = JSON.parse(cleanedText);
     } catch (parseError) {
-        console.error("Failed to parse Gemini JSON:", responseText);
+        console.error("Failed to parse GLM JSON:", responseText);
         return NextResponse.json(
             { error: "فشل في قراءة الرد. يرجى المحاولة مرة أخرى." },
             { status: 500 }
@@ -77,7 +94,7 @@ Output format (JSON):
         context: 'course_generation',
         prompt: topic,
         response: 'JSON structure generated successfully',
-        model_used: 'gemini-1.5-flash'
+        model_used: 'deepseek-chat'
     }).then(({ error }) => {
         if (error) console.error("Error logging AI interaction:", error);
     });

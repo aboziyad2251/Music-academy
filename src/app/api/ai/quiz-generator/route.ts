@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,7 +17,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const level = body.level || "beginner";
 
-    if (!process.env.GOOGLE_AI_API_KEY) {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
       return NextResponse.json(
         { error: "API key is missing." },
         { status: 503 }
@@ -40,25 +37,44 @@ Format as JSON array with the exact following schema:
   "audio_hint": "string" 
 }]
 
-Ensure the options are the actual maqam names in Arabic. Keep it strict JSON.`;
+Ensure the options are the actual maqam names in Arabic. Keep it strict JSON. Respond ONLY with the JSON array.`;
 
-    const result = await model.generateContent({
-        contents: [
-            { role: "user", parts: [{ text: promptText }] }
-        ],
-        generationConfig: {
-            temperature: 0.7,
-        }
-    });
+    const response = await fetch(
+      "https://api.deepseek.com/chat/completions",
+      {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            { role: "user", content: promptText }
+          ],
+          temperature: 0.7,
+        }),
+      }
+    );
 
-    const responseText = result.response.text();
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("DeepSeek API Error:", errorText);
+      return NextResponse.json(
+        { error: "فشل في التواصل مع خدمة الذكاء الاصطناعي." },
+        { status: 500 }
+      );
+    }
+
+    const data = await response.json();
+    const responseText = data.choices?.[0]?.message?.content || "";
     let parsedResponse;
 
     try {
         const cleanedText = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
         parsedResponse = JSON.parse(cleanedText);
     } catch (parseError) {
-        console.error("Failed to parse Gemini JSON:", responseText);
+        console.error("Failed to parse GLM JSON:", responseText);
         return NextResponse.json(
             { error: "فشل في قراءة الرد. يرجى المحاولة مرة أخرى." },
             { status: 500 }
@@ -72,7 +88,7 @@ Ensure the options are the actual maqam names in Arabic. Keep it strict JSON.`;
         context: 'ear_training_quiz',
         prompt: `Generate ${level} quiz`,
         response: 'JSON array generated successfully',
-        model_used: 'gemini-1.5-flash'
+        model_used: 'deepseek-chat'
     }).then(({ error }) => {
         if (error) console.error("Error logging AI interaction:", error);
     });
