@@ -5,6 +5,7 @@ import { Inter, Amiri, IBM_Plex_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { FloatingChat } from "@/components/chat/FloatingChat";
+import { ThemeProvider } from "next-themes";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const amiri = Amiri({ subsets: ["arabic"], weight: ["400", "700"], variable: "--font-amiri" });
@@ -27,11 +28,13 @@ export default function RootLayout({
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
       <body className={`min-h-screen bg-background antialiased ${amiri.className} ${ibmMono.variable}`}>
-        <LanguageProvider>
-          {children}
-        </LanguageProvider>
-        <FloatingChat />
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
+          <FloatingChat />
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

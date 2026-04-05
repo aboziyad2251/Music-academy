@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface StudentShellProps {
   user: {
@@ -180,6 +181,7 @@ export default function StudentShell({ user, children }: StudentShellProps) {
 
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
+            <ThemeToggle />
             {/* Bell */}
             <NotificationBell />
 
