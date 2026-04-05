@@ -13,7 +13,14 @@ const ibmMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "600"], vari
 
 export const metadata: Metadata = {
   title: "أكاديمية المقام - ACADEMY OF THE MAQAM",
-  description: "Professional online music education platform",
+  description: "Professional online Arabic music education platform",
+  manifest: "/manifest.json",
+  themeColor: "#f59e0b",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "المقام",
+  },
 };
 
 export default function RootLayout({
@@ -27,6 +34,13 @@ export default function RootLayout({
 
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="المقام" />
+      </head>
       <body className={`min-h-screen bg-background antialiased ${amiri.className} ${ibmMono.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <LanguageProvider>
