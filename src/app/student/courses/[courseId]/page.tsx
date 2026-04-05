@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import CourseReviews from "@/components/student/CourseReviews";
+import CourseLeaderboard from "@/components/student/CourseLeaderboard";
 import {
   Loader2,
   PlayCircle,
@@ -19,6 +20,7 @@ import {
   Star,
   ClipboardList,
   Award,
+  Trophy,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -447,6 +449,19 @@ export default function CourseDetailPage({
               </ul>
             </div>
           </div>
+
+          {/* Leaderboard */}
+          {isEnrolled && (
+            <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl mt-4">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800">
+                <Trophy className="h-4 w-4 text-yellow-400" />
+                <span className="text-sm font-semibold text-white">Leaderboard</span>
+              </div>
+              <div className="p-2">
+                <CourseLeaderboard courseId={params.courseId} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

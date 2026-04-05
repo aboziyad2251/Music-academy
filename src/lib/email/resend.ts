@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const apiKey = process.env.RESEND_API_KEY;
 const resend = apiKey ? new Resend(apiKey) : null;
-const FROM_EMAIL = "Music Academy <noreply@musiconlineacademy.com>"; // Replace with your verified Resend domain
+const FROM_EMAIL = "أكاديمية المقام <noreply@m-academy.mabotargagh.online>";
 
 export async function sendWelcomeEmail(userEmail: string, userName: string) {
   if (!resend) {
