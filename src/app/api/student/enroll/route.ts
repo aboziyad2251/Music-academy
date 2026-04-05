@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { courseId } = await req.json();
+    const { courseId, couponCode } = await req.json();
     if (!courseId) return NextResponse.json({ error: "courseId required" }, { status: 400 });
 
     const admin = createAdminClient();
@@ -27,14 +27,48 @@ export async function POST(req: NextRequest) {
     // Get course title for notification
     const { data: course } = await admin
       .from("courses")
-      .select("title")
+      .select("title, price")
       .eq("id", courseId)
       .single();
+
+    // Validate coupon if provided
+    let couponId: string | null = null;
+    let discountApplied = 0;
+
+    if (couponCode) {
+      const { data: coupon } = await admin
+        .from("coupons")
+        .select("*")
+        .eq("code", couponCode.toUpperCase().trim())
+        .eq("is_active", true)
+        .single();
+
+      if (coupon) {
+        const notExpired = !coupon.expires_at || new Date(coupon.expires_at) >= new Date();
+        const hasUses = coupon.max_uses === null || coupon.used_count < coupon.max_uses;
+        const courseMatch = !coupon.course_id || coupon.course_id === courseId;
+
+        if (notExpired && hasUses && courseMatch) {
+          couponId = coupon.id;
+          const price = course?.price ?? 0;
+          discountApplied = coupon.discount_type === "percentage"
+            ? (price * coupon.discount_value) / 100
+            : Math.min(coupon.discount_value, price);
+
+          // Increment used_count
+          await admin.from("coupons")
+            .update({ used_count: coupon.used_count + 1 })
+            .eq("id", coupon.id);
+        }
+      }
+    }
 
     // Enroll
     const { error } = await admin.from("enrollments").insert({
       course_id: courseId,
       student_id: user.id,
+      coupon_id: couponId,
+      discount_applied: discountApplied,
     });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

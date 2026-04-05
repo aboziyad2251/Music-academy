@@ -15,6 +15,7 @@ import {
   X,
   Music2,
   Shield,
+  Tag,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ export default function AdminShell({ user, children }: AdminShellProps) {
     { href: "/admin/users",     label: t.nav.users,     icon: Users },
     { href: "/admin/courses",   label: t.nav.courses,   icon: BookOpen },
     { href: "/admin/analytics", label: t.nav.analytics, icon: BarChart3 },
+    { href: "/admin/coupons",   label: "كوبونات",        icon: Tag },
     { href: "/admin/settings",  label: t.nav.settings,  icon: Settings },
   ];
 

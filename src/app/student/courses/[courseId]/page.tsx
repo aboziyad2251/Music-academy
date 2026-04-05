@@ -21,6 +21,8 @@ import {
   ClipboardList,
   Award,
   Trophy,
+  Tag,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,6 +42,12 @@ export default function CourseDetailPage({
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [enrollmentCount, setEnrollmentCount] = useState<number | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponValidating, setCouponValidating] = useState(false);
+  const [couponResult, setCouponResult] = useState<{
+    valid: boolean; message: string; discount_type?: string;
+    discount_value?: number; coupon_id?: string;
+  } | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -105,13 +113,35 @@ export default function CourseDetailPage({
     fetchCourseDetails();
   }, [params.courseId, supabase]);
 
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponValidating(true);
+    setCouponResult(null);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, courseId: params.courseId }),
+      });
+      const data = await res.json();
+      setCouponResult(data);
+    } catch {
+      setCouponResult({ valid: false, message: "فشل التحقق من الكود" });
+    } finally {
+      setCouponValidating(false);
+    }
+  };
+
   const handleEnroll = async () => {
     setCheckoutLoading(true);
     try {
       const res = await fetch("/api/student/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseId: params.courseId }),
+        body: JSON.stringify({
+          courseId: params.courseId,
+          couponCode: couponResult?.valid ? couponCode : undefined,
+        }),
       });
       const data = await res.json();
       if (data.enrolled) {
@@ -413,20 +443,74 @@ export default function CourseDetailPage({
                   ) : null}
                 </div>
               ) : (
-                <Button
-                  onClick={handleEnroll}
-                  disabled={checkoutLoading}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-11 text-base"
-                >
-                  {checkoutLoading ? (
-                    <>
-                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    "Enroll Now"
+                <div className="space-y-3">
+                  {/* Coupon Input */}
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        value={couponCode}
+                        onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
+                        onKeyDown={e => e.key === "Enter" && handleValidateCoupon()}
+                        placeholder="كود الخصم (اختياري)"
+                        className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
+                        dir="ltr"
+                      />
+                      <button
+                        onClick={handleValidateCoupon}
+                        disabled={couponValidating || !couponCode.trim()}
+                        className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-slate-300 text-xs font-medium transition-colors disabled:opacity-40 flex items-center gap-1"
+                      >
+                        {couponValidating
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <Tag className="h-3.5 w-3.5" />}
+                        تطبيق
+                      </button>
+                    </div>
+                    {couponResult && (
+                      <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-xl border ${
+                        couponResult.valid
+                          ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
+                          : "bg-red-950/40 border-red-800 text-red-300"
+                      }`}>
+                        {couponResult.valid
+                          ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                          : <XCircle className="h-3.5 w-3.5 shrink-0" />}
+                        {couponResult.message}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price with discount */}
+                  {couponResult?.valid && (
+                    <div className="text-center space-y-0.5">
+                      <div className="text-slate-500 line-through text-sm">${course.price ?? 0}</div>
+                      <div className="text-2xl font-extrabold text-emerald-400">
+                        ${Math.max(0,
+                            (course.price ?? 0) - (
+                              couponResult.discount_type === "percentage"
+                                ? ((course.price ?? 0) * (couponResult.discount_value ?? 0)) / 100
+                                : (couponResult.discount_value ?? 0)
+                            )
+                          ).toFixed(2)}
+                      </div>
+                    </div>
                   )}
-                </Button>
+
+                  <Button
+                    onClick={handleEnroll}
+                    disabled={checkoutLoading}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-11 text-base"
+                  >
+                    {checkoutLoading ? (
+                      <>
+                        <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Enroll Now"
+                    )}
+                  </Button>
+                </div>
               )}
 
               {/* Details */}
