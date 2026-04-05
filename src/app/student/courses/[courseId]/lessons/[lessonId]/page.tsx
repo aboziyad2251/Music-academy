@@ -584,7 +584,7 @@ export default function LessonDetailPage({
             chatMessages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+                className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse [direction:ltr]" : ""}`}
               >
                 <div
                   className={`h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0 ${

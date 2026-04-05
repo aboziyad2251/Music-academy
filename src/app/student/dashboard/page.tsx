@@ -312,7 +312,7 @@ export default function StudentDashboard() {
                   <div key={idx} className="flex gap-4 relative group">
                     {/* Timeline Line */}
                     {idx !== progress.recentActivity.length - 1 && (
-                      <div className="absolute top-8 bottom-[-24px] right-3.5 w-[2px] bg-slate-800" />
+                      <div className="absolute top-8 bottom-[-24px] start-3.5 w-[2px] bg-slate-800" />
                     )}
                     
                     {/* Timeline Dot */}

@@ -133,7 +133,7 @@ export function FloatingChat() {
 
   return (
     <div 
-      className={cn("fixed z-[100] transition-all duration-300", isRtl ? "bottom-6 left-6" : "bottom-6 right-6")} 
+      className={cn("fixed z-[100] transition-all duration-300", isRtl ? "bottom-6 right-6" : "bottom-6 left-6")}
       dir={isRtl ? "rtl" : "ltr"}
     >
       {/* Floating Button */}

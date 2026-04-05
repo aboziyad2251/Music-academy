@@ -254,8 +254,8 @@ export default function EarTrainingQuiz() {
                             
                             <span className="relative z-10">{opt}</span>
                             
-                            {showCorrect && <CheckCircle2 className="w-6 h-6 absolute left-6 top-1/2 -translate-y-1/2 text-[var(--gold)]" />}
-                            {showWrong && <XCircle className="w-6 h-6 absolute left-6 top-1/2 -translate-y-1/2 text-red-500" />}
+                            {showCorrect && <CheckCircle2 className="w-6 h-6 absolute start-6 top-1/2 -translate-y-1/2 text-[var(--gold)]" />}
+                            {showWrong && <XCircle className="w-6 h-6 absolute start-6 top-1/2 -translate-y-1/2 text-red-500" />}
                         </button>
                     );
                 })}
@@ -265,7 +265,7 @@ export default function EarTrainingQuiz() {
             {isAnswered && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
                     <div className="bg-[var(--dark-2)] border border-[var(--dark-3)] p-6 rounded-2xl relative">
-                         <div className={`absolute top-0 right-0 w-2 h-full rounded-r-2xl ${selectedAnswer === currentQ.correct_index ? 'bg-[var(--gold)]' : 'bg-red-500'}`} />
+                         <div className={`absolute top-0 end-0 w-2 h-full rounded-e-2xl ${selectedAnswer === currentQ.correct_index ? 'bg-[var(--gold)]' : 'bg-red-500'}`} />
                          <h4 className="text-xl font-bold text-white mb-2">الشرح:</h4>
                          <p className="text-slate-300 text-lg leading-relaxed">{currentQ.explanation_ar}</p>
                     </div>
